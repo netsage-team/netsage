@@ -1,0 +1,30 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+db.sqlite3
+db.sqlite3-journal
+
+# Django generated files
+backend/staticfiles/
+backend/media/
+
+# Frontend
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Local files
+*.log
+.DS_Store
+.idea/
