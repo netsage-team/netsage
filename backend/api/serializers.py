@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Device, Site
+from .models import Device, Site, TelemetryReading
 
 
 class SiteSerializer(serializers.ModelSerializer):
@@ -34,3 +34,45 @@ class DeviceSerializer(serializers.ModelSerializer):
             "ip_address",
             "is_active",
         ]
+
+
+class TelemetryReadingSerializer(serializers.ModelSerializer):
+    device_name = serializers.CharField(
+        source="device.name",
+        read_only=True,
+    )
+    device_code = serializers.CharField(
+        source="device.code",
+        read_only=True,
+    )
+    site = serializers.IntegerField(
+        source="device.site_id",
+        read_only=True,
+    )
+
+    class Meta:
+        model = TelemetryReading
+        fields = [
+            "id",
+            "device",
+            "device_name",
+            "device_code",
+            "site",
+            "recorded_at",
+            "received_at",
+            "is_reachable",
+            "latency_ms",
+            "packet_loss_percent",
+            "is_simulated",
+        ]
+
+
+class TelemetryFilterSerializer(serializers.Serializer):
+    device = serializers.IntegerField(
+        required=False,
+        min_value=1,
+    )
+    site = serializers.IntegerField(
+        required=False,
+        min_value=1,
+    )
