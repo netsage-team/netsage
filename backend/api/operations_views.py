@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from rest_framework.authentication import SessionAuthentication
@@ -51,12 +51,22 @@ class IncidentViewSet(StaffReadOnlyViewSet):
 
     def get_queryset(self):
         filters = validated_filters(IncidentFilterSerializer, self.request)
-        queryset = Incident.objects.select_related(
-            "site", "assigned_to",
-        ).order_by("-opened_at", "-id")
+        queryset = (
+            Incident.objects.select_related(
+                "site", "assigned_to",
+            )
+            .prefetch_related("affected_sites")
+            .order_by("-opened_at", "-id")
+        )
+
+        if "site" in filters:
+            site_id = filters["site"]
+            queryset = queryset.filter(
+                Q(site_id=site_id)
+                | Q(affected_sites__id=site_id)
+            ).distinct()
 
         mapping = {
-            "site": "site_id",
             "status": "status",
             "severity": "severity",
             "assigned_to": "assigned_to_id",
@@ -131,7 +141,10 @@ class DashboardSummaryView(APIView):
             site_id = filters["site"]
             sites = sites.filter(pk=site_id)
             devices = devices.filter(site_id=site_id)
-            incidents = incidents.filter(site_id=site_id)
+            incidents = incidents.filter(
+                Q(site_id=site_id)
+                | Q(affected_sites__id=site_id)
+            ).distinct()
             alerts = alerts.filter(device__site_id=site_id)
 
         status_counts = {
