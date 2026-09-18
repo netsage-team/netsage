@@ -4,12 +4,19 @@ from .models import Device, Site, TelemetryReading
 
 
 class SiteSerializer(serializers.ModelSerializer):
+    site_type_label = serializers.CharField(
+        source="get_site_type_display",
+        read_only=True,
+    )
+
     class Meta:
         model = Site
         fields = [
             "id",
             "name",
             "code",
+            "site_type",
+            "site_type_label",
             "location",
             "description",
             "is_active",

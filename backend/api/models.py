@@ -22,10 +22,22 @@ class Severity(models.TextChoices):
 
 
 class Site(TimeStampedModel):
-    """A service location monitored by NetSage."""
+    """A physical or logical service location monitored by NetSage."""
+
+    class SiteType(models.TextChoices):
+        TOWER = "tower", "Tower"
+        POP = "pop", "Point of presence"
+        DATA_CENTER = "data_center", "Data centre"
+        EXCHANGE = "exchange", "Exchange"
+        OTHER = "other", "Other"
 
     name = models.CharField(max_length=120)
     code = models.SlugField(max_length=50, unique=True)
+    site_type = models.CharField(
+        max_length=20,
+        choices=SiteType.choices,
+        default=SiteType.OTHER,
+    )
     location = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
