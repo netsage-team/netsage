@@ -134,6 +134,21 @@ class Incident(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name="incidents",
     )
+
+    # The primary/anchor site keeps existing API compatibility.
+    # affected_sites represents correlated multi-site incidents.
+    affected_sites = models.ManyToManyField(
+        Site,
+        related_name="affected_incidents",
+        blank=True,
+    )
+    shared_dependency = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+    probable_cause = models.TextField(blank=True)
+    confidence_note = models.TextField(blank=True)
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     severity = models.CharField(

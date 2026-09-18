@@ -15,6 +15,16 @@ class EngineerSerializer(serializers.ModelSerializer):
 
 class IncidentSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True)
+    affected_sites = serializers.PrimaryKeyRelatedField(
+        many=True,
+        read_only=True,
+    )
+    affected_site_names = serializers.SlugRelatedField(
+        source="affected_sites",
+        many=True,
+        read_only=True,
+        slug_field="name",
+    )
     assigned_to_name = serializers.CharField(
         source="assigned_to.username",
         read_only=True,
@@ -24,7 +34,10 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = [
-            "id", "site", "site_name", "title", "description",
+            "id", "site", "site_name",
+            "affected_sites", "affected_site_names",
+            "shared_dependency", "probable_cause", "confidence_note",
+            "title", "description",
             "severity", "status", "assigned_to", "assigned_to_name",
             "opened_at", "resolved_at", "recovery_verified_at",
             "resolution_notes", "created_at", "updated_at",

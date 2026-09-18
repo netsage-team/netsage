@@ -76,13 +76,14 @@ def scenario_mukono_uplink_fault(
     Seeta all degrade at roughly the same time because they share the
     Mukono uplink, then all recover.
     """
-    rng = random.Random(seed)
     start = datetime.now(timezone.utc)
     phases = [HEALTHY_PHASE(healthy_before), DEGRADED_PHASE(degraded_for), HEALTHY_PHASE(healthy_after)]
 
     out: Dict[str, List[Reading]] = {}
-    for site_id in SITES:
-        site_rng = random.Random(seed + hash(site_id) % 1000)
+    for site_index, site_id in enumerate(SITES):
+        # Use a stable integer offset instead of Python's randomized
+        # string hash so demo telemetry is reproducible across processes.
+        site_rng = random.Random(seed + site_index)
         out[site_id] = generate_site_readings(site_rng, site_id, start, interval_s, phases)
     return out
 
