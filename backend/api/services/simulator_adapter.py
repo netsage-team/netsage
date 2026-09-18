@@ -61,6 +61,7 @@ def _ensure_demo_topology():
         site, _ = Site.objects.update_or_create(
             code=site_code,
             defaults={
+                "site_type": Site.SiteType.TOWER,
                 "name": simulator_site.name,
                 "location": f"{simulator_site.name}, Uganda",
                 "description": (

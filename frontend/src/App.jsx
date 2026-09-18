@@ -1592,7 +1592,17 @@ function Dashboard({
               </div>
 
               <div className="text-sm text-red-700 dark:text-red-300">
-                {criticalIncident.affected_site_names?.length || 0} affected sites
+                {criticalIncident.affected_site_names?.length || 0}{' '}
+                {(criticalIncident.affected_site_names || []).length > 0 &&
+                (criticalIncident.affected_site_names || []).every((name) =>
+                  sites.some(
+                    (site) =>
+                      site.name === name &&
+                      site.site_type === 'tower',
+                  ),
+                )
+                  ? 'affected towers'
+                  : 'affected sites'}
               </div>
             </div>
           </section>
@@ -1629,6 +1639,239 @@ function Dashboard({
             danger={(summary?.incidents_active ?? 0) > 0}
           />
         </section>
+
+        {sites.some((site) => site.site_type === 'tower') && (() => {
+          const towerSites = sites.filter(
+            (site) => site.site_type === 'tower',
+          )
+
+          const affectedTowerNames =
+            criticalIncident?.affected_site_names || []
+
+          const affectedTowerCount = towerSites.filter((site) =>
+            affectedTowerNames.includes(site.name),
+          ).length
+
+          const dependencyFault =
+            Boolean(criticalIncident) &&
+            affectedTowerCount > 0
+
+          const dependencyName =
+            criticalIncident?.shared_dependency === 'uplink-mukono'
+              ? 'Mukono Shared Uplink'
+              : criticalIncident?.shared_dependency ||
+                'Mukono Shared Uplink'
+
+          return (
+            <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Network
+                        size={18}
+                        className="text-blue-600 dark:text-blue-400"
+                      />
+
+                      <h2 className="font-bold">
+                        Network infrastructure
+                      </h2>
+                    </div>
+
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      Shared backhaul and tower health across the current network view.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {towerSites.length} towers
+                    </span>
+
+                    {dependencyFault ? (
+                      <span className="rounded-full bg-red-100 px-2.5 py-1 text-red-700 dark:bg-red-950 dark:text-red-300">
+                        Shared fault detected
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        Infrastructure healthy
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 sm:p-6">
+                <div className="mx-auto max-w-md">
+                  <div
+                    className={`rounded-2xl border p-4 text-center ${
+                      dependencyFault
+                        ? 'border-red-200 bg-red-50 dark:border-red-900/70 dark:bg-red-950/40'
+                        : 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/70 dark:bg-emerald-950/30'
+                    }`}
+                  >
+                    <div
+                      className={`mx-auto flex h-10 w-10 items-center justify-center rounded-xl ${
+                        dependencyFault
+                          ? 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300'
+                          : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300'
+                      }`}
+                    >
+                      {dependencyFault ? (
+                        <AlertTriangle size={20} />
+                      ) : (
+                        <Network size={20} />
+                      )}
+                    </div>
+
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Shared backhaul
+                    </p>
+
+                    <h3 className="mt-1 font-bold">
+                      {dependencyName}
+                    </h3>
+
+                    <p
+                      className={`mt-1 text-sm font-semibold ${
+                        dependencyFault
+                          ? 'text-red-600 dark:text-red-300'
+                          : 'text-emerald-600 dark:text-emerald-300'
+                      }`}
+                    >
+                      {dependencyFault
+                        ? 'Active degradation detected'
+                        : 'Operating normally'}
+                    </p>
+
+                    {dependencyFault && (
+                      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                        Correlated telemetry suggests this shared dependency may be affecting{' '}
+                        {affectedTowerCount}{' '}
+                        {affectedTowerCount === 1 ? 'tower' : 'towers'}.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mx-auto hidden h-8 w-px bg-slate-300 dark:bg-slate-700 md:block" />
+
+                <div className="relative mx-auto hidden h-8 max-w-5xl md:block">
+                  {towerSites.length > 1 && (
+                    <div
+                      className="absolute top-0 border-t border-slate-300 dark:border-slate-700"
+                      style={{
+                        left: `${50 / towerSites.length}%`,
+                        right: `${50 / towerSites.length}%`,
+                      }}
+                    />
+                  )}
+
+                  <div
+                    className="grid h-full"
+                    style={{
+                      gridTemplateColumns: `repeat(${towerSites.length}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {towerSites.map((site) => (
+                      <div
+                        key={`connector-${site.id}`}
+                        className="mx-auto h-full border-l border-slate-300 dark:border-slate-700"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  className="grid gap-4 md:grid-cols-3"
+                  style={{
+                    gridTemplateColumns:
+                      towerSites.length === 1
+                        ? undefined
+                        : undefined,
+                  }}
+                >
+                  {towerSites.map((site) => {
+                    const siteAlerts = activeAlerts.filter(
+                      (alert) =>
+                        Number(alert.site) === Number(site.id),
+                    )
+
+                    const degraded = siteAlerts.length > 0
+
+                    const affected =
+                      affectedTowerNames.includes(site.name)
+
+                    return (
+                      <article
+                        key={`topology-${site.id}`}
+                        className={`rounded-2xl border p-4 ${
+                          degraded
+                            ? 'border-red-200 bg-red-50/70 dark:border-red-900/60 dark:bg-red-950/20'
+                            : 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                              degraded
+                                ? 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300'
+                                : 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
+                            }`}
+                          >
+                            <Wifi size={19} />
+                          </div>
+
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              degraded
+                                ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                            }`}
+                          >
+                            {degraded ? 'Degraded' : 'Healthy'}
+                          </span>
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                            {site.site_type_label || 'Tower'}
+                          </p>
+
+                          <h3 className="mt-1 font-bold">
+                            {site.name}
+                          </h3>
+
+                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            {site.location}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+                          <span className="text-slate-500 dark:text-slate-400">
+                            {siteAlerts.length}{' '}
+                            active {siteAlerts.length === 1 ? 'alert' : 'alerts'}
+                          </span>
+
+                          {affected && (
+                            <span className="font-semibold text-red-600 dark:text-red-300">
+                              Incident affected
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+                  NetSage correlates degradation across infrastructure that shares a network dependency.
+                  A shared dependency is a probable cause indicator and should be verified by an engineer.
+                </div>
+              </div>
+            </section>
+          )
+        })()}
 
         {loading ? (
           <div className="mt-10 flex items-center justify-center gap-3 py-20 text-slate-500">
@@ -1706,7 +1949,15 @@ function Dashboard({
                         {incident.affected_site_names?.length > 0 && (
                           <div className="mt-4">
                             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                              Affected sites
+                              {(incident.affected_site_names || []).every((name) =>
+                                sites.some(
+                                  (site) =>
+                                    site.name === name &&
+                                    site.site_type === 'tower',
+                                ),
+                              )
+                                ? 'Affected towers'
+                                : 'Affected sites'}
                             </p>
 
                             <div className="mt-2 flex flex-wrap gap-2">
@@ -1835,7 +2086,18 @@ function Dashboard({
                     </div>
 
                     <h3 className="mt-4 font-bold">{site.name}</h3>
-                    <p className="mt-1 text-sm text-slate-500">
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                        {site.site_type_label || 'Site'}
+                      </span>
+
+                      <span className="text-xs text-slate-400">
+                        Infrastructure
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-sm text-slate-500">
                       {site.location}
                     </p>
 
