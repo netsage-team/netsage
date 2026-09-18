@@ -2,6 +2,7 @@ from django.urls import path
 
 from .delivery_views import sms_delivery_report
 from rest_framework.routers import SimpleRouter
+from .incoming_views import incoming_sms_webhook
 
 from .notification_views import (
     IncidentNotificationApproveView,
@@ -43,6 +44,11 @@ urlpatterns = [
         "sms/delivery-report/",
         sms_delivery_report,
         name="sms-delivery-report",
+    ),
+    path(
+    "sms/incoming/",
+    incoming_sms_webhook,
+    name="incoming-sms-webhook",
     ),
     path(
         "incidents/<int:incident_id>/notification-audience/",
