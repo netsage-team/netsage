@@ -1,0 +1,111 @@
+{
+  "incident_id": "incident-site-mukono-central-1789713405",
+  "opened_at": "2026-09-18T06:36:45.269790Z",
+  "affected_sites": [
+    "site-mukono-central",
+    "site-seeta",
+    "site-ucu-area"
+  ],
+  "shared_dependency": "uplink-mukono",
+  "probable_cause": "Shared dependency 'uplink-mukono' (affects 3 of 3 sites on this dependency)",
+  "confidence_note": "Suggestion only, based on correlated timing across sites sharing this dependency - not a confirmed root cause. An engineer should verify.",
+  "recovery_state": "not_yet",
+  "alerts": [
+    {
+      "site_id": "site-mukono-central",
+      "started_at": "2026-09-18T06:36:45.269790Z",
+      "last_seen_at": "2026-09-18T06:38:15.269790Z",
+      "reason": "latency > 150.0ms or packet loss > 5.0% sustained for >= 90s",
+      "evidence": [
+        {
+          "site_id": "site-mukono-central",
+          "timestamp": "2026-09-18T06:36:45.269790Z",
+          "latency_ms": 296.23,
+          "packet_loss_pct": 5.59
+        },
+        {
+          "site_id": "site-mukono-central",
+          "timestamp": "2026-09-18T06:37:15.269790Z",
+          "latency_ms": 223.1,
+          "packet_loss_pct": 8.88
+        },
+        {
+          "site_id": "site-mukono-central",
+          "timestamp": "2026-09-18T06:37:45.269790Z",
+          "latency_ms": 269.19,
+          "packet_loss_pct": 10.33
+        },
+        {
+          "site_id": "site-mukono-central",
+          "timestamp": "2026-09-18T06:38:15.269790Z",
+          "latency_ms": 230.85,
+          "packet_loss_pct": 8.43
+        }
+      ]
+    },
+    {
+      "site_id": "site-ucu-area",
+      "started_at": "2026-09-18T06:36:45.269790Z",
+      "last_seen_at": "2026-09-18T06:38:15.269790Z",
+      "reason": "latency > 150.0ms or packet loss > 5.0% sustained for >= 90s",
+      "evidence": [
+        {
+          "site_id": "site-ucu-area",
+          "timestamp": "2026-09-18T06:36:45.269790Z",
+          "latency_ms": 290.22,
+          "packet_loss_pct": 12.33
+        },
+        {
+          "site_id": "site-ucu-area",
+          "timestamp": "2026-09-18T06:37:15.269790Z",
+          "latency_ms": 259.98,
+          "packet_loss_pct": 8.39
+        },
+        {
+          "site_id": "site-ucu-area",
+          "timestamp": "2026-09-18T06:37:45.269790Z",
+          "latency_ms": 220.53,
+          "packet_loss_pct": 10.33
+        },
+        {
+          "site_id": "site-ucu-area",
+          "timestamp": "2026-09-18T06:38:15.269790Z",
+          "latency_ms": 296.56,
+          "packet_loss_pct": 7.78
+        }
+      ]
+    },
+    {
+      "site_id": "site-seeta",
+      "started_at": "2026-09-18T06:36:45.269790Z",
+      "last_seen_at": "2026-09-18T06:38:15.269790Z",
+      "reason": "latency > 150.0ms or packet loss > 5.0% sustained for >= 90s",
+      "evidence": [
+        {
+          "site_id": "site-seeta",
+          "timestamp": "2026-09-18T06:36:45.269790Z",
+          "latency_ms": 242.94,
+          "packet_loss_pct": 10.16
+        },
+        {
+          "site_id": "site-seeta",
+          "timestamp": "2026-09-18T06:37:15.269790Z",
+          "latency_ms": 257.37,
+          "packet_loss_pct": 10.92
+        },
+        {
+          "site_id": "site-seeta",
+          "timestamp": "2026-09-18T06:37:45.269790Z",
+          "latency_ms": 255.36,
+          "packet_loss_pct": 10.03
+        },
+        {
+          "site_id": "site-seeta",
+          "timestamp": "2026-09-18T06:38:15.269790Z",
+          "latency_ms": 249.56,
+          "packet_loss_pct": 11.44
+        }
+      ]
+    }
+  ]
+}

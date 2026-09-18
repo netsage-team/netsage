@@ -1,0 +1,32 @@
+{
+  "site_id": "site-mukono-central",
+  "started_at": "2026-09-18T06:36:45.269790Z",
+  "last_seen_at": "2026-09-18T06:38:15.269790Z",
+  "reason": "latency > 150.0ms or packet loss > 5.0% sustained for >= 90s",
+  "evidence": [
+    {
+      "site_id": "site-mukono-central",
+      "timestamp": "2026-09-18T06:36:45.269790Z",
+      "latency_ms": 296.23,
+      "packet_loss_pct": 5.59
+    },
+    {
+      "site_id": "site-mukono-central",
+      "timestamp": "2026-09-18T06:37:15.269790Z",
+      "latency_ms": 223.1,
+      "packet_loss_pct": 8.88
+    },
+    {
+      "site_id": "site-mukono-central",
+      "timestamp": "2026-09-18T06:37:45.269790Z",
+      "latency_ms": 269.19,
+      "packet_loss_pct": 10.33
+    },
+    {
+      "site_id": "site-mukono-central",
+      "timestamp": "2026-09-18T06:38:15.269790Z",
+      "latency_ms": 230.85,
+      "packet_loss_pct": 8.43
+    }
+  ]
+}
