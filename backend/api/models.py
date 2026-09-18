@@ -301,6 +301,65 @@ class Customer(TimeStampedModel):
         return self.name
 
 
+class CustomerNetworkReport(TimeStampedModel):
+    """A network problem reported by a customer through SMS."""
+
+    class Status(models.TextChoices):
+        RECEIVED = "received", "Received"
+        MATCHED = "matched", "Matched"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
+        RESOLVED = "resolved", "Resolved"
+
+    sender_phone = models.CharField(
+        max_length=16,
+        validators=[
+            RegexValidator(
+                regex=r"^\+[1-9][0-9]{7,14}$",
+                message="Use international format, for example +256700123456.",
+            ),
+        ],
+    )
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="network_reports",
+    )
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_network_reports",
+    )
+    incident = models.ForeignKey(
+        Incident,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_network_reports",
+    )
+    message = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.RECEIVED,
+        db_index=True,
+    )
+    link_id = models.CharField(
+        max_length=200,
+        blank=True,
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"Customer report #{self.pk}: {self.status}"
+
+
 class Notification(TimeStampedModel):
     """One SMS for one customer, with approval and delivery tracking."""
 
