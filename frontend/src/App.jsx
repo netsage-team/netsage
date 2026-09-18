@@ -448,6 +448,523 @@ function TelemetryChart({ telemetry, metric, title, suffix }) {
 }
 
 
+function CustomerUpdatePanel({ incident }) {
+  const [audience, setAudience] = useState(null)
+  const [messageType, setMessageType] = useState('outage')
+  const [message, setMessage] = useState('')
+  const [draft, setDraft] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [history, setHistory] = useState(null)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const defaultMessages = useMemo(() => {
+    const sites =
+      incident.affected_site_names?.join(', ') ||
+      incident.site_name ||
+      'the affected area'
+
+    return {
+      outage:
+        `We are investigating a network service issue affecting ${sites}. ` +
+        'Our technical team is working to restore normal service.',
+
+      update:
+        `Our technical team is continuing to investigate the network issue affecting ${sites}. ` +
+        'We will provide another update as work progresses.',
+
+      recovery:
+        `Network service affecting ${sites} has recovered and is being monitored. ` +
+        'Thank you for your patience.',
+    }
+  }, [
+    incident.affected_site_names,
+    incident.site_name,
+  ])
+
+  async function loadAudience() {
+    const data = await getJson(
+      `/api/incidents/${incident.id}/notification-audience/`
+    )
+
+    setAudience(data)
+  }
+
+  async function loadDraft(type) {
+    const data = await getJson(
+      `/api/incidents/${incident.id}/notification-draft/?message_type=${encodeURIComponent(type)}`
+    )
+
+    setDraft(data)
+
+    if (data.exists) {
+      setMessage(data.message)
+    } else {
+      setMessage(defaultMessages[type])
+    }
+  }
+
+  useEffect(() => {
+    let active = true
+
+    async function load() {
+      setLoading(true)
+      setError('')
+
+      try {
+        const [audienceData, draftData, historyData] =
+          await Promise.all([
+            getJson(
+              `/api/incidents/${incident.id}/notification-audience/`
+            ),
+            getJson(
+              `/api/incidents/${incident.id}/notification-draft/?message_type=${encodeURIComponent(messageType)}`
+            ),
+            getJson(
+              `/api/incidents/${incident.id}/notification-history/?message_type=${encodeURIComponent(messageType)}`
+            ),
+          ])
+
+        if (!active) return
+
+        setAudience(audienceData)
+        setDraft(draftData)
+        setHistory(historyData)
+
+        if (draftData.exists) {
+          setMessage(draftData.message)
+        } else {
+          setMessage(defaultMessages[messageType])
+        }
+      } catch (err) {
+        if (active) setError(err.message)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      active = false
+    }
+  }, [
+    incident.id,
+    messageType,
+    defaultMessages,
+  ])
+
+  async function loadHistory(type = messageType) {
+    const data = await getJson(
+      `/api/incidents/${incident.id}/notification-history/?message_type=${encodeURIComponent(type)}`
+    )
+
+    setHistory(data)
+  }
+
+  async function sendApproved() {
+    setSending(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const data = await postJson(
+        `/api/incidents/${incident.id}/notification-send/`,
+        {
+          message_type: messageType,
+        }
+      )
+
+      await Promise.all([
+        loadDraft(messageType),
+        loadHistory(messageType),
+      ])
+
+      if (data.mode === 'dry_run') {
+        setSuccess(
+          `Dry run completed for ${data.dry_run_count} recipient${data.dry_run_count === 1 ? '' : 's'}. No external SMS was sent.`
+        )
+      } else {
+        setSuccess(
+          `${data.submitted_count} message${data.submitted_count === 1 ? '' : 's'} submitted to the SMS provider.`
+        )
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  async function saveDraft() {
+    if (!message.trim()) {
+      setError('Enter a customer message first.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await postJson(
+        `/api/incidents/${incident.id}/notification-draft/`,
+        {
+          message_type: messageType,
+          message: message.trim(),
+        }
+      )
+
+      await loadDraft(messageType)
+
+      setSuccess(
+        'Draft saved. It still requires operator approval before sending.'
+      )
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function approveDraft() {
+    setApproving(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const data = await postJson(
+        `/api/incidents/${incident.id}/notification-approve/`,
+        {
+          message_type: messageType,
+        }
+      )
+
+      await Promise.all([
+        loadDraft(messageType),
+        loadHistory(messageType),
+      ])
+
+      setSuccess(
+        `Approved by ${data.approved_by}. No SMS has been sent yet.`
+      )
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950">
+        <RefreshCw
+          size={16}
+          className="animate-spin"
+        />
+        Loading customer notification audience
+      </div>
+    )
+  }
+
+  return (
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <div className="flex items-center gap-2">
+            <BellRing
+              size={18}
+              className="text-blue-600 dark:text-blue-400"
+            />
+
+            <h3 className="font-bold">
+              Customer update
+            </h3>
+          </div>
+
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Prepare an operator-approved SMS for customers on affected sites.
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-white px-4 py-3 text-right shadow-sm dark:bg-slate-900">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Eligible recipients
+          </p>
+
+          <p className="mt-1 text-2xl font-bold">
+            {audience?.eligible_recipients ?? 0}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[0.75fr_1.25fr]">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Audience
+          </p>
+
+          <div className="mt-3 space-y-2">
+            {audience?.affected_sites?.map((site) => (
+              <div
+                key={site.id}
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm dark:border-slate-800 dark:bg-slate-900"
+              >
+                <span className="font-medium">
+                  {site.name}
+                </span>
+
+                <span className="text-slate-400">
+                  {site.eligible_recipients}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {audience?.recipients?.map((recipient) => (
+              <div
+                key={recipient.id}
+                className="text-xs text-slate-500 dark:text-slate-400"
+              >
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {recipient.name}
+                </span>
+                {' · '}
+                {recipient.phone}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor={`message-type-${incident.id}`}
+            className="block text-sm font-semibold"
+          >
+            Message type
+          </label>
+
+          <select
+            id={`message-type-${incident.id}`}
+            value={messageType}
+            onChange={(event) => {
+              setMessageType(event.target.value)
+              setSuccess('')
+              setError('')
+            }}
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900"
+          >
+            <option value="outage">
+              Outage notice
+            </option>
+
+            <option value="update">
+              Progress update
+            </option>
+
+            <option value="recovery">
+              Service restored
+            </option>
+          </select>
+
+          <label
+            htmlFor={`customer-message-${incident.id}`}
+            className="mt-4 block text-sm font-semibold"
+          >
+            Message
+          </label>
+
+          <textarea
+            id={`customer-message-${incident.id}`}
+            rows={5}
+            maxLength={480}
+            value={message}
+            onChange={(event) => {
+              setMessage(event.target.value)
+
+              if (
+                draft?.approval_status === 'approved'
+              ) {
+                setDraft((current) => ({
+                  ...current,
+                  approval_status: 'pending',
+                }))
+              }
+            }}
+            className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-6 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900"
+          />
+
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs text-slate-400">
+              {message.length}/480 characters
+            </span>
+
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                draft?.approval_status === 'approved'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                  : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+              }`}
+            >
+              {draft?.approval_status === 'approved'
+                ? 'Approved'
+                : 'Approval pending'}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={saveDraft}
+              disabled={
+                saving ||
+                !message.trim() ||
+                !audience?.eligible_recipients
+              }
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+            >
+              {saving
+                ? 'Saving draft...'
+                : 'Save draft'}
+            </button>
+
+            <button
+              type="button"
+              onClick={approveDraft}
+              disabled={
+                approving ||
+                !draft?.exists ||
+                draft?.approval_status === 'approved'
+              }
+              className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            >
+              <ShieldCheck size={16} />
+
+              {approving
+                ? 'Approving...'
+                : 'Approve message'}
+            </button>
+          </div>
+
+          {draft?.approval_status === 'approved' && (
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/40">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                    Ready for delivery
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-blue-700 dark:text-blue-300">
+                    {audience?.sms_mode === 'dry_run'
+                      ? 'Safe dry-run mode is active. No message will leave NetSage.'
+                      : 'Sandbox mode is active. Only allowlisted test recipients can receive messages.'}
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                  {audience?.sms_mode || 'unknown'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={sendApproved}
+                disabled={sending}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                {sending ? (
+                  <>
+                    <RefreshCw
+                      size={15}
+                      className="animate-spin"
+                    />
+                    Processing
+                  </>
+                ) : audience?.sms_mode === 'dry_run' ? (
+                  <>
+                    <BellRing size={16} />
+                    Run safe SMS dry run
+                  </>
+                ) : (
+                  <>
+                    <BellRing size={16} />
+                    Send approved SMS
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {history?.notifications?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Delivery history
+              </p>
+
+              <div className="mt-2 space-y-2">
+                {history.notifications.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-700 dark:text-slate-200">
+                        {item.customer}
+                      </p>
+
+                      <p className="mt-0.5 text-slate-400">
+                        {item.site} · {item.phone}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`rounded-full px-2.5 py-1 font-semibold ${
+                        item.delivery_status === 'dry_run'
+                          ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                          : item.delivery_status === 'delivered'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                          : item.delivery_status === 'failed'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
+                          : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                      }`}
+                    >
+                      {statusLabel(item.delivery_status)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-3 text-xs leading-5 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            Approval does not send an SMS. Sending will remain a separate explicit action.
+          </div>
+
+          {success && (
+            <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+              {success}
+            </p>
+          )}
+
+          {error && (
+            <p
+              role="alert"
+              className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
 function IncidentWorkspace({
   incident,
   engineers,
@@ -834,6 +1351,10 @@ function IncidentWorkspace({
           </div>
         </div>
       </div>
+
+      <CustomerUpdatePanel
+        incident={incident}
+      />
     </div>
   )
 }
