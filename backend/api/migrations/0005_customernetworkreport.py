@@ -8,8 +8,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0002_add_incident_correlation_fields'),
-    ]
+    ('api', '0004_add_notification_dry_run_status'),
+]
 
     operations = [
         migrations.CreateModel(
