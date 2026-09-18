@@ -228,6 +228,43 @@ class Alert(TimeStampedModel):
         return f"{self.device.code}: {self.alert_type}"
 
 
+class IncidentEvent(models.Model):
+    """An auditable activity recorded against an incident."""
+
+    class EventType(models.TextChoices):
+        DETECTED = "detected", "Incident detected"
+        ASSIGNMENT = "assignment", "Engineer assignment"
+        STATUS = "status", "Status change"
+        NOTE = "note", "Investigation note"
+        RECOVERY = "recovery", "Recovery update"
+        RESOLVED = "resolved", "Incident resolved"
+
+    incident = models.ForeignKey(
+        Incident,
+        on_delete=models.CASCADE,
+        related_name="timeline",
+    )
+    event_type = models.CharField(
+        max_length=30,
+        choices=EventType.choices,
+    )
+    message = models.TextField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="incident_events",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+
+    def __str__(self):
+        return f"{self.incident_id}: {self.event_type}"
+
+
 class Customer(TimeStampedModel):
     """A customer receiving service from one site in the pilot."""
 

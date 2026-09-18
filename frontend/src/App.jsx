@@ -32,6 +32,8 @@ import {
 import {
   getCurrentUser,
   getJson,
+  patchJson,
+  postJson,
   resultsOf,
   signIn,
   signOut,
@@ -446,6 +448,239 @@ function TelemetryChart({ telemetry, metric, title, suffix }) {
 }
 
 
+function IncidentWorkspace({
+  incident,
+  engineers,
+  onUpdated,
+}) {
+  const [engineerId, setEngineerId] = useState(
+    incident.assigned_to ? String(incident.assigned_to) : ''
+  )
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [noteBusy, setNoteBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setEngineerId(
+      incident.assigned_to ? String(incident.assigned_to) : ''
+    )
+  }, [incident.assigned_to])
+
+  async function assignAndInvestigate() {
+    if (!engineerId) {
+      setError('Select an engineer before starting investigation.')
+      return
+    }
+
+    setBusy(true)
+    setError('')
+
+    try {
+      await patchJson(
+        `/api/incidents/${incident.id}/manage/`,
+        {
+          assigned_to: Number(engineerId),
+          status: 'investigating',
+        }
+      )
+
+      await onUpdated()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function addNote() {
+    const trimmed = note.trim()
+
+    if (!trimmed) {
+      setError('Enter an investigation note first.')
+      return
+    }
+
+    setNoteBusy(true)
+    setError('')
+
+    try {
+      await postJson(
+        `/api/incidents/${incident.id}/notes/`,
+        {
+          note: trimmed,
+        }
+      )
+
+      setNote('')
+      await onUpdated()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setNoteBusy(false)
+    }
+  }
+
+  const timeline = [...(incident.timeline || [])].reverse()
+
+  return (
+    <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Incident response
+          </p>
+
+          <label
+            htmlFor={`engineer-${incident.id}`}
+            className="mt-4 block text-sm font-semibold"
+          >
+            Assigned engineer
+          </label>
+
+          <select
+            id={`engineer-${incident.id}`}
+            value={engineerId}
+            onChange={(event) => setEngineerId(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+          >
+            <option value="">Select engineer</option>
+
+            {engineers.map((engineer) => (
+              <option
+                key={engineer.id}
+                value={engineer.id}
+              >
+                {engineer.first_name || engineer.last_name
+                  ? `${engineer.first_name} ${engineer.last_name}`.trim()
+                  : engineer.username}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={assignAndInvestigate}
+            disabled={busy || incident.status === 'resolved'}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                Updating incident
+              </>
+            ) : (
+              <>
+                <Users size={16} />
+                Assign and start investigation
+              </>
+            )}
+          </button>
+
+          <label
+            htmlFor={`note-${incident.id}`}
+            className="mt-5 block text-sm font-semibold"
+          >
+            Investigation note
+          </label>
+
+          <textarea
+            id={`note-${incident.id}`}
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            rows={4}
+            maxLength={2000}
+            placeholder="Example: Checking the Mukono uplink and upstream connectivity."
+            className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+          />
+
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-xs text-slate-400">
+              {note.length}/2000
+            </span>
+
+            <button
+              type="button"
+              onClick={addNote}
+              disabled={noteBusy || !note.trim()}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
+            >
+              {noteBusy ? 'Saving...' : 'Add note'}
+            </button>
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Activity timeline
+          </p>
+
+          <div className="mt-4 space-y-4">
+            {timeline.length ? (
+              timeline.map((event) => (
+                <div
+                  key={event.id}
+                  className="relative flex gap-3"
+                >
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`mt-1 h-3 w-3 rounded-full ${
+                        event.event_type === 'detected'
+                          ? 'bg-red-500'
+                          : event.event_type === 'note'
+                          ? 'bg-amber-500'
+                          : 'bg-blue-600'
+                      }`}
+                    />
+
+                    <span className="mt-1 h-full w-px bg-slate-200 dark:bg-slate-700" />
+                  </div>
+
+                  <div className="min-w-0 flex-1 pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">
+                        {statusLabel(event.event_type)}
+                      </p>
+
+                      <span className="text-xs text-slate-400">
+                        {formatDate(event.created_at)}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                      {event.message}
+                    </p>
+
+                    {event.actor_name && (
+                      <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                        By {event.actor_name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">
+                No incident activity recorded yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 function Dashboard({
   user,
   darkMode,
@@ -459,6 +694,7 @@ function Dashboard({
   const [telemetry, setTelemetry] = useState([])
   const [alerts, setAlerts] = useState([])
   const [incidents, setIncidents] = useState([])
+  const [engineers, setEngineers] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -466,6 +702,11 @@ function Dashboard({
   async function loadSites() {
     const data = await getJson('/api/sites/')
     setSites(resultsOf(data))
+  }
+
+  async function loadEngineers() {
+    const data = await getJson('/api/engineers/')
+    setEngineers(resultsOf(data))
   }
 
   async function loadDashboard(showRefresh = false) {
@@ -511,7 +752,10 @@ function Dashboard({
   }
 
   useEffect(() => {
-    loadSites().catch((err) => setError(err.message))
+    Promise.all([
+      loadSites(),
+      loadEngineers(),
+    ]).catch((err) => setError(err.message))
   }, [])
 
   useEffect(() => {
@@ -763,6 +1007,13 @@ function Dashboard({
                                 {statusLabel(incident.status)}
                               </span>
                             </div>
+
+                            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                              Engineer:{' '}
+                              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                {incident.assigned_to_name || 'Unassigned'}
+                              </span>
+                            </p>
                           </div>
 
                           <span className="text-xs text-slate-400">
@@ -806,6 +1057,12 @@ function Dashboard({
                             )}
                           </div>
                         )}
+
+                        <IncidentWorkspace
+                          incident={incident}
+                          engineers={engineers}
+                          onUpdated={() => loadDashboard(true)}
+                        />
                       </div>
                     ))
                   ) : (

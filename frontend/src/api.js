@@ -80,3 +80,24 @@ export function resultsOf(data) {
   if (Array.isArray(data)) return data
   return data?.results || []
 }
+
+async function authenticatedJsonRequest(path, method, body) {
+  const csrfToken = await getCsrfToken()
+
+  return apiRequest(path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    body: JSON.stringify(body),
+  })
+}
+
+export async function patchJson(path, body) {
+  return authenticatedJsonRequest(path, 'PATCH', body)
+}
+
+export async function postJson(path, body) {
+  return authenticatedJsonRequest(path, 'POST', body)
+}

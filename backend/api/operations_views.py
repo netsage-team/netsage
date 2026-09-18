@@ -4,18 +4,21 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from rest_framework.authentication import SessionAuthentication
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .models import Alert, Device, Incident, Site
+from .models import Alert, Device, Incident, IncidentEvent, Site
 from .operations_serializers import (
     AlertFilterSerializer,
     AlertSerializer,
     EngineerSerializer,
+    IncidentEventSerializer,
     IncidentFilterSerializer,
+    IncidentNoteSerializer,
     IncidentSerializer,
     IncidentUpdateSerializer,
     SiteFilterSerializer,
@@ -55,7 +58,10 @@ class IncidentViewSet(StaffReadOnlyViewSet):
             Incident.objects.select_related(
                 "site", "assigned_to",
             )
-            .prefetch_related("affected_sites")
+            .prefetch_related(
+                "affected_sites",
+                "timeline__actor",
+            )
             .order_by("-opened_at", "-id")
         )
 
@@ -81,10 +87,12 @@ class IncidentViewSet(StaffReadOnlyViewSet):
     @action(detail=True, methods=["patch"])
     def manage(self, request, pk=None):
         with transaction.atomic():
-            # Lock during updates on databases supporting row locks.
             incident = self.get_queryset().select_for_update(
                 of=("self",)
             ).get(pk=self.get_object().pk)
+
+            previous_assignee = incident.assigned_to_id
+            previous_status = incident.status
 
             serializer = IncidentUpdateSerializer(
                 incident,
@@ -94,7 +102,66 @@ class IncidentViewSet(StaffReadOnlyViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            return Response(IncidentSerializer(incident).data)
+            if incident.assigned_to_id != previous_assignee:
+                if incident.assigned_to:
+                    message = (
+                        f"Incident assigned to "
+                        f"{incident.assigned_to.username}."
+                    )
+                else:
+                    message = "Engineer assignment cleared."
+
+                IncidentEvent.objects.create(
+                    incident=incident,
+                    event_type=IncidentEvent.EventType.ASSIGNMENT,
+                    message=message,
+                    actor=request.user,
+                )
+
+            if incident.status != previous_status:
+                IncidentEvent.objects.create(
+                    incident=incident,
+                    event_type=IncidentEvent.EventType.STATUS,
+                    message=(
+                        f"Incident status changed from "
+                        f"{previous_status} to {incident.status}."
+                    ),
+                    actor=request.user,
+                )
+
+            incident = self.get_queryset().get(pk=incident.pk)
+
+            return Response(
+                IncidentSerializer(incident).data
+            )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="notes",
+    )
+    def notes(self, request, pk=None):
+        serializer = IncidentNoteSerializer(
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            incident = self.get_queryset().select_for_update(
+                of=("self",)
+            ).get(pk=self.get_object().pk)
+
+            event = IncidentEvent.objects.create(
+                incident=incident,
+                event_type=IncidentEvent.EventType.NOTE,
+                message=serializer.validated_data["note"],
+                actor=request.user,
+            )
+
+        return Response(
+            IncidentEventSerializer(event).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class AlertViewSet(StaffReadOnlyViewSet):
