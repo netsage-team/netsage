@@ -13,6 +13,10 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from .models import Alert, Device, Incident, IncidentEvent, Site
 from .services.recovery import evaluate_incident_recovery
+# from .services.recovery import evaluate_incident_recovery
+from .services.customer_report_updates import (
+    send_report_recovery_update,
+)
 from .operations_serializers import (
     AlertFilterSerializer,
     AlertSerializer,
@@ -241,6 +245,15 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                 ),
                 actor=request.user,
             )
+            recovery_message = (
+                "NetSage: Service has recovered. "
+                "Our team is monitoring the connection to confirm stability."
+           )
+
+            send_report_recovery_update(
+                incident,
+                recovery_message,
+          )
 
             incident = self.get_queryset().get(
                 pk=incident.pk

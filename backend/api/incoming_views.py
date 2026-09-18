@@ -3,7 +3,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import CustomerNetworkReport
-
+from .services.customer_report_preferences import (
+    opt_out_customer_report_updates,
+)
 
 @csrf_exempt
 @require_POST
@@ -32,6 +34,18 @@ def incoming_sms_webhook(request):
                 "detail": "Incoming SMS requires sender and message.",
             },
             status=400,
+        )
+    if message.upper() == "STOP":
+        opt_out_customer_report_updates(
+            sender_phone,
+        )
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "detail": "Customer updates disabled.",
+            },
+            status=200,
         )
 
     report = CustomerNetworkReport.objects.create(

@@ -364,6 +364,7 @@ class CustomerNetworkReport(TimeStampedModel):
         blank=True,
         db_index=True,
     )
+    updates_opted_in = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-created_at", "-id"]

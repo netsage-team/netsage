@@ -15,6 +15,10 @@ from .services.sms import (
     SmsRecipientError,
     send_sms,
 )
+from .services.customer_report_updates import (
+    send_report_progress_update,
+    send_report_recovery_update,
+)
 
 from .notification_serializers import (
     NotificationApprovalSerializer,
@@ -508,6 +512,12 @@ class IncidentNotificationSendView(StaffAPIView):
                     "updated_at",
                 ],
             )
+
+            if message_type == Notification.MessageType.UPDATE:
+                send_report_progress_update(
+                    incident,
+                    message,
+                )
 
         return Response({
             "incident": incident.id,
