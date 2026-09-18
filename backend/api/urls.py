@@ -1,6 +1,14 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 
+from .notification_views import (
+    IncidentNotificationApproveView,
+    IncidentNotificationAudienceView,
+    IncidentNotificationDraftView,
+    IncidentNotificationHistoryView,
+    IncidentNotificationSendView,
+)
+
 from .operations_views import (
     AlertViewSet,
     DashboardSummaryView,
@@ -29,6 +37,31 @@ router.register("engineers", EngineerViewSet, basename="engineer")
 
 urlpatterns = [
     path("health/", health, name="health"),
+    path(
+        "incidents/<int:incident_id>/notification-audience/",
+        IncidentNotificationAudienceView.as_view(),
+        name="notification-audience",
+    ),
+    path(
+        "incidents/<int:incident_id>/notification-draft/",
+        IncidentNotificationDraftView.as_view(),
+        name="notification-draft",
+    ),
+    path(
+        "incidents/<int:incident_id>/notification-approve/",
+        IncidentNotificationApproveView.as_view(),
+        name="notification-approve",
+    ),
+    path(
+        "incidents/<int:incident_id>/notification-send/",
+        IncidentNotificationSendView.as_view(),
+        name="notification-send",
+    ),
+    path(
+        "incidents/<int:incident_id>/notification-history/",
+        IncidentNotificationHistoryView.as_view(),
+        name="notification-history",
+    ),
     path(
         "dashboard/summary/",
         DashboardSummaryView.as_view(),

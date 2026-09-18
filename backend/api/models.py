@@ -316,6 +316,7 @@ class Notification(TimeStampedModel):
 
     class DeliveryStatus(models.TextChoices):
         NOT_SENT = "not_sent", "Not sent"
+        DRY_RUN = "dry_run", "Dry run only"
         QUEUED = "queued", "Queued"
         SENT = "sent", "Accepted by SMS provider"
         DELIVERED = "delivered", "Delivered"
