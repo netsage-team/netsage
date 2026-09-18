@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom'
+import PublicHome from './pages/PublicHome'
+import {
   Activity,
   AlertTriangle,
   BellRing,
@@ -2127,7 +2134,7 @@ function Dashboard({
 }
 
 
-export default function App() {
+function OperationsApp() {
   const [user, setUser] = useState(null)
   const [checkingSession, setCheckingSession] = useState(true)
   const [darkMode, setDarkMode] = useState(() => {
@@ -2177,5 +2184,18 @@ export default function App() {
       toggleDarkMode={() => setDarkMode((value) => !value)}
       onSignedOut={() => setUser(null)}
     />
+  )
+}
+
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<PublicHome />} />
+        <Route path="/operations/*" element={<OperationsApp />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
