@@ -153,3 +153,156 @@ class SimulatorIncidentTimelineTests(APITestCase):
             IncidentEvent.EventType.DETECTED,
         )
         self.assertIsNone(event.actor)
+
+
+class IncidentRecoveryWorkflowTests(APITestCase):
+    def setUp(self):
+        self.operator = User.objects.create_user(
+            username="recovery-engineer",
+            password="test-password-only",
+            is_staff=True,
+        )
+
+        self.client.force_authenticate(
+            user=self.operator,
+        )
+
+        run_simulator_scenario(
+            "mukono-uplink-fault",
+        )
+
+        self.incident = Incident.objects.get(
+            shared_dependency="uplink-mukono",
+        )
+
+        self.incident.assigned_to = self.operator
+        self.incident.status = Incident.Status.INVESTIGATING
+        self.incident.save(
+            update_fields=[
+                "assigned_to",
+                "status",
+                "updated_at",
+            ]
+        )
+
+    def test_sustained_recovery_moves_incident_to_monitoring(self):
+        response = self.client.post(
+            reverse(
+                "incident-verify-recovery",
+                args=[self.incident.pk],
+            ),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+            response.data,
+        )
+
+        self.incident.refresh_from_db()
+
+        self.assertEqual(
+            self.incident.status,
+            Incident.Status.MONITORING,
+        )
+
+        self.assertIsNotNone(
+            self.incident.recovery_verified_at
+        )
+
+        self.assertTrue(
+            self.incident.timeline.filter(
+                event_type=IncidentEvent.EventType.RECOVERY,
+            ).exists()
+        )
+
+        self.assertTrue(
+            response.data["recovery"]["recovered"]
+        )
+
+    def test_resolving_monitoring_incident_clears_alerts(self):
+        verify_response = self.client.post(
+            reverse(
+                "incident-verify-recovery",
+                args=[self.incident.pk],
+            ),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(
+            verify_response.status_code,
+            200,
+            verify_response.data,
+        )
+
+        response = self.client.post(
+            reverse(
+                "incident-resolve-incident",
+                args=[self.incident.pk],
+            ),
+            {
+                "resolution_notes": (
+                    "Shared uplink recovered and remained "
+                    "healthy during the monitoring window."
+                )
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+            response.data,
+        )
+
+        self.incident.refresh_from_db()
+
+        self.assertEqual(
+            self.incident.status,
+            Incident.Status.RESOLVED,
+        )
+
+        self.assertIsNotNone(
+            self.incident.resolved_at
+        )
+
+        self.assertFalse(
+            self.incident.alerts.filter(
+                cleared_at__isnull=True,
+            ).exists()
+        )
+
+        self.assertTrue(
+            self.incident.timeline.filter(
+                event_type=IncidentEvent.EventType.RESOLVED,
+            ).exists()
+        )
+
+    def test_incident_cannot_resolve_before_recovery_monitoring(self):
+        response = self.client.post(
+            reverse(
+                "incident-resolve-incident",
+                args=[self.incident.pk],
+            ),
+            {
+                "resolution_notes": (
+                    "Attempting premature resolution."
+                )
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.incident.refresh_from_db()
+
+        self.assertEqual(
+            self.incident.status,
+            Incident.Status.INVESTIGATING,
+        )

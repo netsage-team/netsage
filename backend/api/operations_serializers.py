@@ -117,6 +117,13 @@ class IncidentNoteSerializer(serializers.Serializer):
     )
 
 
+class IncidentResolutionSerializer(serializers.Serializer):
+    resolution_notes = serializers.CharField(
+        max_length=2000,
+        trim_whitespace=True,
+    )
+
+
 class IncidentUpdateSerializer(serializers.ModelSerializer):
     assigned_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(is_active=True, is_staff=True),

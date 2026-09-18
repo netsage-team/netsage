@@ -459,6 +459,10 @@ function IncidentWorkspace({
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [noteBusy, setNoteBusy] = useState(false)
+  const [recoveryBusy, setRecoveryBusy] = useState(false)
+  const [resolveBusy, setResolveBusy] = useState(false)
+  const [resolutionNotes, setResolutionNotes] = useState('')
+  const [recoveryMessage, setRecoveryMessage] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -521,6 +525,62 @@ function IncidentWorkspace({
     }
   }
 
+  async function verifyRecovery() {
+    setRecoveryBusy(true)
+    setError('')
+    setRecoveryMessage('')
+
+    try {
+      const data = await postJson(
+        `/api/incidents/${incident.id}/verify-recovery/`,
+        {}
+      )
+
+      const recoveredSites =
+        data.recovery?.sites?.length || 0
+
+      setRecoveryMessage(
+        `Sustained healthy telemetry verified across ${recoveredSites} affected site${recoveredSites === 1 ? '' : 's'}.`
+      )
+
+      await onUpdated()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setRecoveryBusy(false)
+    }
+  }
+
+  async function resolveIncident() {
+    const trimmed = resolutionNotes.trim()
+
+    if (!trimmed) {
+      setError(
+        'Add resolution notes before closing the incident.'
+      )
+      return
+    }
+
+    setResolveBusy(true)
+    setError('')
+
+    try {
+      await postJson(
+        `/api/incidents/${incident.id}/resolve/`,
+        {
+          resolution_notes: trimmed,
+        }
+      )
+
+      setResolutionNotes('')
+      await onUpdated()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setResolveBusy(false)
+    }
+  }
+
   const timeline = [...(incident.timeline || [])].reverse()
 
   return (
@@ -561,7 +621,10 @@ function IncidentWorkspace({
           <button
             type="button"
             onClick={assignAndInvestigate}
-            disabled={busy || incident.status === 'resolved'}
+            disabled={
+              busy ||
+              !['open', 'investigating'].includes(incident.status)
+            }
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? (
@@ -608,6 +671,101 @@ function IncidentWorkspace({
               {noteBusy ? 'Saving...' : 'Add note'}
             </button>
           </div>
+
+          {incident.status === 'investigating' && (
+            <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/40">
+              <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                Recovery verification
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-blue-700 dark:text-blue-300">
+                Check whether all affected sites have maintained healthy telemetry for the configured recovery period.
+              </p>
+
+              <button
+                type="button"
+                onClick={verifyRecovery}
+                disabled={recoveryBusy}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                {recoveryBusy ? (
+                  <>
+                    <RefreshCw
+                      size={15}
+                      className="animate-spin"
+                    />
+                    Checking telemetry
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} />
+                    Verify sustained recovery
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {incident.status === 'monitoring' && (
+            <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                Recovery verified
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-emerald-700 dark:text-emerald-300">
+                Sustained healthy telemetry has been verified. The assigned engineer can now close the incident.
+              </p>
+
+              <label
+                htmlFor={`resolution-${incident.id}`}
+                className="mt-4 block text-sm font-semibold"
+              >
+                Resolution notes
+              </label>
+
+              <textarea
+                id={`resolution-${incident.id}`}
+                value={resolutionNotes}
+                onChange={(event) =>
+                  setResolutionNotes(event.target.value)
+                }
+                rows={3}
+                maxLength={2000}
+                placeholder="Describe what was verified before closure."
+                className="mt-2 w-full resize-none rounded-xl border border-emerald-200 bg-white px-3 py-3 text-sm outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-slate-950"
+              />
+
+              <button
+                type="button"
+                onClick={resolveIncident}
+                disabled={
+                  resolveBusy || !resolutionNotes.trim()
+                }
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {resolveBusy ? (
+                  <>
+                    <RefreshCw
+                      size={15}
+                      className="animate-spin"
+                    />
+                    Resolving
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} />
+                    Resolve incident
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {recoveryMessage && (
+            <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+              {recoveryMessage}
+            </p>
+          )}
 
           {error && (
             <p
@@ -771,6 +929,9 @@ function Dashboard({
   }
 
   const activeAlerts = alerts.filter((alert) => !alert.cleared_at)
+  const activeIncidents = incidents.filter(
+    (incident) => incident.status !== 'resolved'
+  )
   const criticalIncident = incidents.find(
     (incident) =>
       incident.severity === 'critical' &&
@@ -985,8 +1146,8 @@ function Dashboard({
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {incidents.length ? (
-                    incidents.map((incident) => (
+                  {activeIncidents.length ? (
+                    activeIncidents.map((incident) => (
                       <div key={incident.id} className="p-5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
