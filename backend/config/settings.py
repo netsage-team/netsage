@@ -132,3 +132,14 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+
+# Local frontend origins; deployed origins come from the environment.
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "http://127.0.0.1:5173,http://localhost:5173" if DEBUG else "",
+    ).split(",")
+    if origin.strip()
+]
