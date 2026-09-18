@@ -13,6 +13,7 @@ from api.models import (
     Alert,
     Device,
     Incident,
+    IncidentEvent,
     Notification,
     Severity,
     Site,
@@ -267,6 +268,15 @@ def run_simulator_scenario(
         )
 
         incident.affected_sites.set(affected_sites)
+
+        IncidentEvent.objects.create(
+            incident=incident,
+            event_type=IncidentEvent.EventType.DETECTED,
+            message=(
+                "Incident automatically detected from sustained "
+                "correlated network degradation."
+            ),
+        )
 
         for simulator_alert in simulator_incident.alerts:
             alert = alert_map[simulator_alert.site_id]
