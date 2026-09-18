@@ -1,4 +1,6 @@
 from django.urls import path
+
+from .delivery_views import sms_delivery_report
 from rest_framework.routers import SimpleRouter
 
 from .notification_views import (
@@ -37,6 +39,11 @@ router.register("engineers", EngineerViewSet, basename="engineer")
 
 urlpatterns = [
     path("health/", health, name="health"),
+    path(
+        "sms/delivery-report/",
+        sms_delivery_report,
+        name="sms-delivery-report",
+    ),
     path(
         "incidents/<int:incident_id>/notification-audience/",
         IncidentNotificationAudienceView.as_view(),
