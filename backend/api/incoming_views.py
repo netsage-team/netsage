@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import CustomerNetworkReport
+from .services.customer_reports import match_customer_report_to_incident
 
 
 @csrf_exempt
@@ -39,6 +40,8 @@ def incoming_sms_webhook(request):
         message=message,
         link_id=link_id,
     )
+
+    match_customer_report_to_incident(report)
 
     return JsonResponse(
         {
