@@ -1,34 +1,62 @@
 import {
   Activity,
   BellRing,
+  CheckCircle2,
   GitMerge,
+  History,
+  Map,
   MessageSquareText,
+  Workflow,
 } from 'lucide-react'
 
 const capabilities = [
   {
-    title: 'Monitor network health',
+    title: 'Real-time monitoring',
     description:
-      'Observe the condition of distributed sites, devices and connections.',
+      'Track latency, packet loss and service health across network devices.',
     icon: Activity,
   },
   {
-    title: 'Detect degradation',
+    title: 'Degradation detection',
     description:
-      'Identify sustained latency, packet loss and connectivity problems.',
+      'Identify sustained unhealthy conditions without treating every temporary spike as an incident.',
     icon: BellRing,
   },
   {
-    title: 'Understand incidents',
+    title: 'Incident correlation',
     description:
-      'Correlate related alerts and identify the sites affected by a shared fault.',
+      'Group related alerts and surface evidence of a probable shared dependency.',
     icon: GitMerge,
   },
   {
-    title: 'Coordinate response',
+    title: 'Multi-site visibility',
     description:
-      'Support recovery workflows and timely customer communication.',
+      'See affected towers, sites and shared infrastructure in one operational context.',
+    icon: Map,
+  },
+  {
+    title: 'Incident operations',
+    description:
+      'Assign engineers, record investigation notes and follow the incident lifecycle.',
+    icon: Workflow,
+  },
+  {
+    title: 'Customer communication',
+    description:
+      'Send controlled outage updates through SMS and track delivery status.',
     icon: MessageSquareText,
+  },
+  {
+    title: 'Recovery verification',
+    description:
+      'Confirm that healthy network conditions are sustained before resolution.',
+    icon: CheckCircle2,
+  },
+  {
+    title: 'Operational history',
+    description:
+      'Preserve incident activity, status changes and communication records for review.',
+    icon: History,
   },
 ]
 
@@ -49,27 +77,26 @@ export default function ProductOverview() {
           </h2>
 
           <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
-            NetSage gives internet service providers a connected operational
-            view for moving from detection to investigation, response and
-            customer communication.
+            NetSage connects monitoring, incident context, engineering response
+            and customer communication in one operational workflow.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {capabilities.map(({ title, description, icon: Icon }) => (
             <article
               key={title}
-              className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-slate-950"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-slate-700 dark:bg-slate-950"
             >
               <div className="inline-flex rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-                <Icon size={24} aria-hidden="true" />
+                <Icon size={23} aria-hidden="true" />
               </div>
 
-              <h3 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">
+              <h3 className="mt-5 text-lg font-bold text-slate-950 dark:text-white">
                 {title}
               </h3>
 
-              <p className="mt-3 leading-7 text-slate-600 dark:text-slate-300">
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {description}
               </p>
             </article>
