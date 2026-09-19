@@ -8,7 +8,13 @@ import ProductOverview from '../components/marketing/ProductOverview'
 
 export default function PublicHome() {
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('netsage-theme') === 'dark'
+    const savedTheme = localStorage.getItem('netsage-theme')
+
+    if (savedTheme) {
+      return savedTheme === 'dark'
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
   useEffect(() => {
