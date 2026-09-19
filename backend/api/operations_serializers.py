@@ -1,7 +1,14 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Alert, Incident, Severity
+from .models import (
+    Alert,
+    CustomerNetworkReport,
+    Incident,
+    IncidentEvent,
+    Notification,
+    Severity,
+)
 
 
 User = get_user_model()
@@ -13,8 +20,42 @@ class EngineerSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "first_name", "last_name"]
 
 
+class IncidentEventSerializer(serializers.ModelSerializer):
+    actor_name = serializers.CharField(
+        source="actor.username",
+        read_only=True,
+        default=None,
+    )
+
+    class Meta:
+        model = IncidentEvent
+        fields = [
+            "id",
+            "event_type",
+            "message",
+            "actor",
+            "actor_name",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 class IncidentSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True)
+    timeline = IncidentEventSerializer(
+        many=True,
+        read_only=True,
+    )
+    affected_sites = serializers.PrimaryKeyRelatedField(
+        many=True,
+        read_only=True,
+    )
+    affected_site_names = serializers.SlugRelatedField(
+        source="affected_sites",
+        many=True,
+        read_only=True,
+        slug_field="name",
+    )
     assigned_to_name = serializers.CharField(
         source="assigned_to.username",
         read_only=True,
@@ -24,10 +65,14 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = [
-            "id", "site", "site_name", "title", "description",
+            "id", "site", "site_name",
+            "affected_sites", "affected_site_names",
+            "shared_dependency", "probable_cause", "confidence_note",
+            "title", "description",
             "severity", "status", "assigned_to", "assigned_to_name",
             "opened_at", "resolved_at", "recovery_verified_at",
-            "resolution_notes", "created_at", "updated_at",
+            "resolution_notes", "timeline",
+            "created_at", "updated_at",
         ]
         read_only_fields = fields
 
@@ -72,6 +117,20 @@ class AlertFilterSerializer(SiteFilterSerializer):
     cleared = serializers.BooleanField(required=False)
 
 
+class IncidentNoteSerializer(serializers.Serializer):
+    note = serializers.CharField(
+        max_length=2000,
+        trim_whitespace=True,
+    )
+
+
+class IncidentResolutionSerializer(serializers.Serializer):
+    resolution_notes = serializers.CharField(
+        max_length=2000,
+        trim_whitespace=True,
+    )
+
+
 class IncidentUpdateSerializer(serializers.ModelSerializer):
     assigned_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(is_active=True, is_staff=True),
@@ -112,3 +171,98 @@ class IncidentUpdateSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+
+class CustomerReportSerializer(serializers.ModelSerializer):
+    masked_sender = serializers.SerializerMethodField()
+    customer_name = serializers.CharField(
+        source="customer.name",
+        read_only=True,
+        default=None,
+    )
+    site_id = serializers.IntegerField(
+        source="site.id",
+        read_only=True,
+        default=None,
+    )
+    site_name = serializers.CharField(
+        source="site.name",
+        read_only=True,
+        default=None,
+    )
+    site_type = serializers.CharField(
+        source="site.site_type",
+        read_only=True,
+        default=None,
+    )
+    incident_id = serializers.IntegerField(
+        source="incident.id",
+        read_only=True,
+        default=None,
+    )
+    incident_status = serializers.CharField(
+        source="incident.status",
+        read_only=True,
+        default=None,
+    )
+    report_status = serializers.CharField(
+        source="status",
+        read_only=True,
+    )
+    acknowledgement_status = serializers.SerializerMethodField()
+    received_at = serializers.DateTimeField(
+        source="created_at",
+        read_only=True,
+    )
+    latest_delivery_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomerNetworkReport
+        fields = [
+            "id",
+            "masked_sender",
+            "customer_name",
+            "site_id",
+            "site_name",
+            "site_type",
+            "incident_id",
+            "incident_status",
+            "message",
+            "report_status",
+            "acknowledgement_status",
+            "received_at",
+            "latest_delivery_status",
+        ]
+        read_only_fields = fields
+
+    def get_masked_sender(self, obj):
+        phone = obj.sender_phone
+
+        if len(phone) <= 4:
+            return "*" * len(phone)
+
+        return f"{phone[:4]}{'*' * (len(phone) - 7)}{phone[-3:]}"
+
+    def get_acknowledgement_status(self, obj):
+        if obj.status == CustomerNetworkReport.Status.ACKNOWLEDGED:
+            return "acknowledged"
+
+        return "not_acknowledged"
+
+    def get_latest_delivery_status(self, obj):
+        if obj.customer_id is None or obj.incident_id is None:
+            return None
+
+        notification = (
+            Notification.objects
+            .filter(
+                customer_id=obj.customer_id,
+                incident_id=obj.incident_id,
+            )
+            .order_by("-created_at", "-id")
+            .first()
+        )
+
+        if notification is None:
+            return None
+
+        return notification.delivery_status
