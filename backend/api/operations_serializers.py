@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Alert, Incident, Severity
+from .models import Alert, Incident, IncidentEvent, Severity
 
 
 User = get_user_model()
@@ -13,8 +13,42 @@ class EngineerSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "first_name", "last_name"]
 
 
+class IncidentEventSerializer(serializers.ModelSerializer):
+    actor_name = serializers.CharField(
+        source="actor.username",
+        read_only=True,
+        default=None,
+    )
+
+    class Meta:
+        model = IncidentEvent
+        fields = [
+            "id",
+            "event_type",
+            "message",
+            "actor",
+            "actor_name",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 class IncidentSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True)
+    timeline = IncidentEventSerializer(
+        many=True,
+        read_only=True,
+    )
+    affected_sites = serializers.PrimaryKeyRelatedField(
+        many=True,
+        read_only=True,
+    )
+    affected_site_names = serializers.SlugRelatedField(
+        source="affected_sites",
+        many=True,
+        read_only=True,
+        slug_field="name",
+    )
     assigned_to_name = serializers.CharField(
         source="assigned_to.username",
         read_only=True,
@@ -24,10 +58,14 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = [
-            "id", "site", "site_name", "title", "description",
+            "id", "site", "site_name",
+            "affected_sites", "affected_site_names",
+            "shared_dependency", "probable_cause", "confidence_note",
+            "title", "description",
             "severity", "status", "assigned_to", "assigned_to_name",
             "opened_at", "resolved_at", "recovery_verified_at",
-            "resolution_notes", "created_at", "updated_at",
+            "resolution_notes", "timeline",
+            "created_at", "updated_at",
         ]
         read_only_fields = fields
 
@@ -70,6 +108,20 @@ class AlertFilterSerializer(SiteFilterSerializer):
         required=False,
     )
     cleared = serializers.BooleanField(required=False)
+
+
+class IncidentNoteSerializer(serializers.Serializer):
+    note = serializers.CharField(
+        max_length=2000,
+        trim_whitespace=True,
+    )
+
+
+class IncidentResolutionSerializer(serializers.Serializer):
+    resolution_notes = serializers.CharField(
+        max_length=2000,
+        trim_whitespace=True,
+    )
 
 
 class IncidentUpdateSerializer(serializers.ModelSerializer):
