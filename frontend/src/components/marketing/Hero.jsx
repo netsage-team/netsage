@@ -7,13 +7,13 @@ export default function Hero() {
       id="home"
       className="scroll-mt-24 overflow-hidden bg-slate-950 text-white"
     >
-      <div className="mx-auto grid min-h-[720px] max-w-7xl items-center gap-14 px-5 py-20 lg:grid-cols-2 lg:px-8">
+      <div className="mx-auto grid min-h-[calc(100svh-73px)] max-w-7xl items-center gap-10 px-5 py-14 sm:py-16 lg:min-h-[680px] lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-20">
         <div>
           <p className="mb-6 text-sm font-semibold uppercase tracking-[0.22em] text-blue-400">
             Network monitoring and incident response
           </p>
 
-          <h1 className="max-w-3xl text-5xl font-black leading-tight sm:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-black leading-[1.08] sm:text-5xl lg:text-6xl">
             Network clarity.
             <span className="block text-red-400">
               Connected communities.
