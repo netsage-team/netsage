@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  BrowserRouter,
+  Link,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom'
+import PublicHome from './pages/PublicHome'
+import {
   Activity,
   AlertTriangle,
   BellRing,
@@ -111,11 +119,21 @@ function Login({ onSignedIn, darkMode, toggleDarkMode }) {
 
           <div className="relative flex h-full max-w-3xl flex-col justify-between p-14 text-white">
             <div className="w-fit rounded-xl bg-white/95 px-3 py-2 shadow-sm">
-              <img
-                src="/images/netsage-logo.png"
-                alt="NetSage"
-                className="h-8 w-fit object-contain"
-              />
+              <Link
+  to="/"
+  className="flex items-center gap-3 rounded-lg"
+  aria-label="Back to NetSage public website"
+>
+  <img
+    src="/images/netsage-logo.png"
+    alt="NetSage"
+    className="h-9 w-fit object-contain"
+  />
+
+  <span className="hidden text-sm font-semibold text-blue-600 hover:text-blue-700 lg:inline dark:text-blue-400">
+    Back to NetSage
+  </span>
+</Link>
             </div>
 
             <div className="pb-14">
@@ -2127,7 +2145,7 @@ function Dashboard({
 }
 
 
-export default function App() {
+function OperationsApp() {
   const [user, setUser] = useState(null)
   const [checkingSession, setCheckingSession] = useState(true)
   const [darkMode, setDarkMode] = useState(() => {
@@ -2177,5 +2195,18 @@ export default function App() {
       toggleDarkMode={() => setDarkMode((value) => !value)}
       onSignedOut={() => setUser(null)}
     />
+  )
+}
+
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<PublicHome />} />
+        <Route path="/operations/*" element={<OperationsApp />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
