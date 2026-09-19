@@ -9,7 +9,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-
+import DemoPreview from './DemoPreview'
 const workflowSteps = [
   {
     number: '01',
@@ -244,24 +244,30 @@ export default function ProductExperience() {
             </h2>
 
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">
-              Explore the existing operations experience to review network
-              health, alerts, topology and incident response.
-            </p>
+  Follow a network incident from degraded telemetry and correlated
+  tower alerts through investigation, customer communication and
+  verified recovery.
+</p>
 
-            <Link
-              to="/operations"
-              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-500"
-            >
-              Open Operations Demo
-              <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+  <Link
+    to="/operations"
+    className="netsage-button-primary"
+  >
+    Open Operations Demo
+    <ArrowRight size={18} aria-hidden="true" />
+  </Link>
+
+  <a
+    href="#how-it-works"
+    className="inline-flex items-center justify-center rounded-xl border border-slate-600 px-6 py-3.5 font-semibold text-white transition hover:border-blue-400 hover:text-blue-300"
+  >
+    How NetSage works
+  </a>
+</div>
           </div>
 
-          <img
-            src="/images/netsage-network-operations.png"
-            alt="Preview of the NetSage network operations dashboard"
-            className="w-full rounded-3xl border border-white/10 shadow-2xl"
-          />
+          <DemoPreview />
         </div>
       </section>
     </>

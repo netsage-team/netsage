@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Route,
   Routes,
@@ -118,11 +119,21 @@ function Login({ onSignedIn, darkMode, toggleDarkMode }) {
 
           <div className="relative flex h-full max-w-3xl flex-col justify-between p-14 text-white">
             <div className="w-fit rounded-xl bg-white/95 px-3 py-2 shadow-sm">
-              <img
-                src="/images/netsage-logo.png"
-                alt="NetSage"
-                className="h-8 w-fit object-contain"
-              />
+              <Link
+  to="/"
+  className="flex items-center gap-3 rounded-lg"
+  aria-label="Back to NetSage public website"
+>
+  <img
+    src="/images/netsage-logo.png"
+    alt="NetSage"
+    className="h-9 w-fit object-contain"
+  />
+
+  <span className="hidden text-sm font-semibold text-blue-600 hover:text-blue-700 lg:inline dark:text-blue-400">
+    Back to NetSage
+  </span>
+</Link>
             </div>
 
             <div className="pb-14">
