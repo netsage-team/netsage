@@ -20,6 +20,9 @@ from .models import (
     Site,
 )
 from .services.recovery import evaluate_incident_recovery
+from .services.customer_incident_updates import (
+    notify_customers_of_incident_status,
+)
 from .operations_serializers import (
     AlertFilterSerializer,
     AlertSerializer,
@@ -139,6 +142,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                     actor=request.user,
                 )
 
+                notify_customers_of_incident_status(incident)
+
             incident = self.get_queryset().get(pk=incident.pk)
 
             return Response(
@@ -235,6 +240,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                 ]
             )
 
+            notify_customers_of_incident_status(incident)
+
             site_names = ", ".join(
                 result["site_name"]
                 for result in recovery["sites"]
@@ -330,6 +337,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                     "updated_at",
                 ]
             )
+
+            notify_customers_of_incident_status(incident)
 
             cleared_count = incident.alerts.filter(
                 cleared_at__isnull=True,
