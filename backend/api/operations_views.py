@@ -11,7 +11,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .models import Alert, Device, Incident, IncidentEvent, Site
+from .models import (
+    Alert,
+    CustomerNetworkReport,
+    Device,
+    Incident,
+    IncidentEvent,
+    Site,
+)
 from .services.recovery import evaluate_incident_recovery
 from .operations_serializers import (
     AlertFilterSerializer,
@@ -24,6 +31,7 @@ from .operations_serializers import (
     IncidentSerializer,
     IncidentUpdateSerializer,
     SiteFilterSerializer,
+    CustomerReportSerializer,
 )
 from .views import StandardPagination
 
@@ -430,3 +438,15 @@ class DashboardSummaryView(APIView):
                 severity="critical",
             ).count(),
         })
+
+class CustomerReportViewSet(StaffReadOnlyViewSet):
+    queryset = (
+        CustomerNetworkReport.objects
+        .select_related(
+            "customer",
+            "site",
+            "incident",
+        )
+        .order_by("-created_at", "-id")
+    )
+    serializer_class = CustomerReportSerializer

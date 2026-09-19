@@ -14,6 +14,7 @@ from .notification_views import (
 
 from .operations_views import (
     AlertViewSet,
+    CustomerReportViewSet,
     DashboardSummaryView,
     EngineerViewSet,
     IncidentViewSet,
@@ -37,6 +38,11 @@ router.register(
 router.register("alerts", AlertViewSet, basename="alert")
 router.register("incidents", IncidentViewSet, basename="incident")
 router.register("engineers", EngineerViewSet, basename="engineer")
+router.register(
+    "customer-reports",
+    CustomerReportViewSet,
+    basename="customer-report",
+)
 
 urlpatterns = [
     path("health/", health, name="health"),

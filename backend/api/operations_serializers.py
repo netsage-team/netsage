@@ -1,7 +1,14 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Alert, Incident, IncidentEvent, Severity
+from .models import (
+    Alert,
+    CustomerNetworkReport,
+    Incident,
+    IncidentEvent,
+    Notification,
+    Severity,
+)
 
 
 User = get_user_model()
@@ -164,3 +171,98 @@ class IncidentUpdateSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+
+class CustomerReportSerializer(serializers.ModelSerializer):
+    masked_sender = serializers.SerializerMethodField()
+    customer_name = serializers.CharField(
+        source="customer.name",
+        read_only=True,
+        default=None,
+    )
+    site_id = serializers.IntegerField(
+        source="site.id",
+        read_only=True,
+        default=None,
+    )
+    site_name = serializers.CharField(
+        source="site.name",
+        read_only=True,
+        default=None,
+    )
+    site_type = serializers.CharField(
+        source="site.site_type",
+        read_only=True,
+        default=None,
+    )
+    incident_id = serializers.IntegerField(
+        source="incident.id",
+        read_only=True,
+        default=None,
+    )
+    incident_status = serializers.CharField(
+        source="incident.status",
+        read_only=True,
+        default=None,
+    )
+    report_status = serializers.CharField(
+        source="status",
+        read_only=True,
+    )
+    acknowledgement_status = serializers.SerializerMethodField()
+    received_at = serializers.DateTimeField(
+        source="created_at",
+        read_only=True,
+    )
+    latest_delivery_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomerNetworkReport
+        fields = [
+            "id",
+            "masked_sender",
+            "customer_name",
+            "site_id",
+            "site_name",
+            "site_type",
+            "incident_id",
+            "incident_status",
+            "message",
+            "report_status",
+            "acknowledgement_status",
+            "received_at",
+            "latest_delivery_status",
+        ]
+        read_only_fields = fields
+
+    def get_masked_sender(self, obj):
+        phone = obj.sender_phone
+
+        if len(phone) <= 4:
+            return "*" * len(phone)
+
+        return f"{phone[:4]}{'*' * (len(phone) - 7)}{phone[-3:]}"
+
+    def get_acknowledgement_status(self, obj):
+        if obj.status == CustomerNetworkReport.Status.ACKNOWLEDGED:
+            return "acknowledged"
+
+        return "not_acknowledged"
+
+    def get_latest_delivery_status(self, obj):
+        if obj.customer_id is None or obj.incident_id is None:
+            return None
+
+        notification = (
+            Notification.objects
+            .filter(
+                customer_id=obj.customer_id,
+                incident_id=obj.incident_id,
+            )
+            .order_by("-created_at", "-id")
+            .first()
+        )
+
+        if notification is None:
+            return None
+
+        return notification.delivery_status
