@@ -125,10 +125,16 @@ def send_sms(message, recipients):
 
     sms = africastalking.SMS
 
+    sender_id = (
+        settings.AFRICASTALKING_SENDER_ID
+        or None
+    )
+
     try:
         response = sms.send(
             message,
             recipients,
+            sender_id=sender_id,
         )
     except AfricasTalkingException as exc:
         message_text = str(exc)
