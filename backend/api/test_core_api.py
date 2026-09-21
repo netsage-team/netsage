@@ -3,7 +3,7 @@ from django.core.management import call_command
 
 from rest_framework.test import APITestCase
 
-from .models import Device, Site, TelemetryReading
+from .models import Customer, CustomerNetworkReport, Device, Site, TelemetryReading
 
 
 User = get_user_model()
@@ -55,6 +55,31 @@ class CoreAPITests(APITestCase):
             latency_ms=40,
             packet_loss_percent=1,
             is_simulated=True,
+        )
+
+    def test_customer_network_report_can_be_created(self):
+        customer = Customer.objects.create(
+            site=self.mukono,
+            name="Test Customer",
+            phone_number="+256700123456",
+            sms_opt_in=True,
+            is_active=True,
+        )
+
+        report = CustomerNetworkReport.objects.create(
+            sender_phone=customer.phone_number,
+            customer=customer,
+            site=self.mukono,
+            message="Internet is very slow.",
+        )
+
+        self.assertEqual(CustomerNetworkReport.objects.count(), 1)
+        self.assertEqual(report.customer, customer)
+        self.assertEqual(report.site, self.mukono)
+        self.assertEqual(report.message, "Internet is very slow.")
+        self.assertEqual(
+            report.status,
+            CustomerNetworkReport.Status.RECEIVED,
         )
 
     def authenticate(self):

@@ -4,7 +4,14 @@ from django.utils import timezone
 
 from rest_framework.test import APITestCase
 
-from .models import Alert, Device, Incident, Site
+from .models import (
+    Alert,
+    Customer,
+    CustomerNetworkReport,
+    Device,
+    Incident,
+    Site,
+)
 
 
 User = get_user_model()
@@ -256,3 +263,157 @@ class OperationsAPITests(APITestCase):
 
         self.assertIn(self.staff.pk, engineer_ids)
         self.assertNotIn(self.viewer.pk, engineer_ids)
+
+class CustomerReportsAPITests(APITestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username="reports-operator",
+            password="test-password-only",
+            is_staff=True,
+        )
+
+        self.viewer = User.objects.create_user(
+            username="reports-viewer",
+            password="test-password-only",
+        )
+
+        self.site = Site.objects.create(
+            name="Reports Mukono",
+            code="reports-mukono",
+            location="Mukono",
+            site_type=Site.SiteType.TOWER,
+        )
+
+        self.customer = Customer.objects.create(
+            site=self.site,
+            name="Reports Customer",
+            phone_number="+256700123456",
+            sms_opt_in=True,
+            is_active=True,
+        )
+
+        self.incident = Incident.objects.create(
+            site=self.site,
+            title="Reports network outage",
+            status=Incident.Status.OPEN,
+        )
+
+        self.report = CustomerNetworkReport.objects.create(
+            sender_phone=self.customer.phone_number,
+            customer=self.customer,
+            site=self.site,
+            incident=self.incident,
+            message="Internet is not working.",
+            status=CustomerNetworkReport.Status.MATCHED,
+        )
+
+        self.client.force_authenticate(user=self.staff)
+
+    def test_staff_can_list_customer_reports(self):
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+            response.data,
+        )
+
+    def test_anonymous_access_is_blocked(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_nonstaff_access_is_blocked(self):
+        self.client.force_authenticate(user=self.viewer)
+
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_customer_report_serializes_masked_sender_and_context(self):
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+        report = response.data["results"][0]
+
+        self.assertEqual(report["masked_sender"], "+256******456")
+        self.assertEqual(report["customer_name"], "Reports Customer")
+        self.assertEqual(report["site_id"], self.site.id)
+        self.assertEqual(report["site_name"], "Reports Mukono")
+        self.assertEqual(report["site_type"], "tower")
+        self.assertEqual(report["incident_id"], self.incident.id)
+        self.assertEqual(report["incident_status"], "open")
+        self.assertEqual(report["message"], "Internet is not working.")
+        self.assertEqual(report["report_status"], "matched")
+        self.assertEqual(report["acknowledgement_status"], "not_acknowledged")
+        self.assertNotIn(self.customer.phone_number, str(report))
+
+    def test_unknown_sender_is_safe(self):
+        report = CustomerNetworkReport.objects.create(
+            sender_phone="+256701987654",
+            message="No internet at my location.",
+            status=CustomerNetworkReport.Status.RECEIVED,
+        )
+
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+        reports = response.data["results"]
+        unknown_report = next(
+            item for item in reports
+            if item["id"] == report.id
+        )
+
+        self.assertEqual(
+            unknown_report["masked_sender"],
+            "+256******654",
+        )
+        self.assertIsNone(unknown_report["customer_name"])
+        self.assertIsNone(unknown_report["site_id"])
+        self.assertIsNone(unknown_report["site_name"])
+        self.assertIsNone(unknown_report["incident_id"])
+        self.assertEqual(
+            unknown_report["report_status"],
+            "received",
+        )
+        self.assertNotIn(
+            report.sender_phone,
+            str(unknown_report),
+        )
+    def test_customer_reports_are_newest_first(self):
+        older_report = CustomerNetworkReport.objects.create(
+            sender_phone="+256701111111",
+            message="Older network report.",
+            status=CustomerNetworkReport.Status.RECEIVED,
+        )
+
+        newer_report = CustomerNetworkReport.objects.create(
+            sender_phone="+256702222222",
+            message="Newer network report.",
+            status=CustomerNetworkReport.Status.RECEIVED,
+        )
+
+        response = self.client.get(
+            reverse("customer-report-list")
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+        reports = response.data["results"]
+
+        self.assertEqual(reports[0]["id"], newer_report.id)
+        self.assertEqual(reports[1]["id"], older_report.id)

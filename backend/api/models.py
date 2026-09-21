@@ -22,10 +22,22 @@ class Severity(models.TextChoices):
 
 
 class Site(TimeStampedModel):
-    """A service location monitored by NetSage."""
+    """A physical or logical service location monitored by NetSage."""
+
+    class SiteType(models.TextChoices):
+        TOWER = "tower", "Tower"
+        POP = "pop", "Point of presence"
+        DATA_CENTER = "data_center", "Data centre"
+        EXCHANGE = "exchange", "Exchange"
+        OTHER = "other", "Other"
 
     name = models.CharField(max_length=120)
     code = models.SlugField(max_length=50, unique=True)
+    site_type = models.CharField(
+        max_length=20,
+        choices=SiteType.choices,
+        default=SiteType.OTHER,
+    )
     location = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -129,11 +141,38 @@ class Incident(TimeStampedModel):
         MONITORING = "monitoring", "Monitoring recovery"
         RESOLVED = "resolved", "Resolved"
 
+    class EscalationLevel(models.TextChoices):
+        NONE = "none", "Not escalated"
+        LEVEL_1 = "level_1", "Level 1"
+        LEVEL_2 = "level_2", "Level 2"
+        LEVEL_3 = "level_3", "Level 3"
+
+    class EscalationStatus(models.TextChoices):
+        NOT_ESCALATED = "not_escalated", "Not escalated"
+        ESCALATED = "escalated", "Escalated"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
+        DISPATCHED = "dispatched", "Technician dispatched"
+
     site = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
         related_name="incidents",
     )
+
+    # The primary/anchor site keeps existing API compatibility.
+    # affected_sites represents correlated multi-site incidents.
+    affected_sites = models.ManyToManyField(
+        Site,
+        related_name="affected_incidents",
+        blank=True,
+    )
+    shared_dependency = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+    probable_cause = models.TextField(blank=True)
+    confidence_note = models.TextField(blank=True)
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     severity = models.CharField(
@@ -158,6 +197,25 @@ class Incident(TimeStampedModel):
     resolved_at = models.DateTimeField(null=True, blank=True)
     recovery_verified_at = models.DateTimeField(null=True, blank=True)
     resolution_notes = models.TextField(blank=True)
+
+    escalation_level = models.CharField(
+        max_length=20,
+        choices=EscalationLevel.choices,
+        default=EscalationLevel.NONE,
+    )
+    escalation_status = models.CharField(
+        max_length=30,
+        choices=EscalationStatus.choices,
+        default=EscalationStatus.NOT_ESCALATED,
+    )
+    escalation_team = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+    escalated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-opened_at", "-id"]
@@ -213,6 +271,44 @@ class Alert(TimeStampedModel):
         return f"{self.device.code}: {self.alert_type}"
 
 
+class IncidentEvent(models.Model):
+    """An auditable activity recorded against an incident."""
+
+    class EventType(models.TextChoices):
+        DETECTED = "detected", "Incident detected"
+        ASSIGNMENT = "assignment", "Engineer assignment"
+        ESCALATION = "escalation", "Incident escalation"
+        STATUS = "status", "Status change"
+        NOTE = "note", "Investigation note"
+        RECOVERY = "recovery", "Recovery update"
+        RESOLVED = "resolved", "Incident resolved"
+
+    incident = models.ForeignKey(
+        Incident,
+        on_delete=models.CASCADE,
+        related_name="timeline",
+    )
+    event_type = models.CharField(
+        max_length=30,
+        choices=EventType.choices,
+    )
+    message = models.TextField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="incident_events",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+
+    def __str__(self):
+        return f"{self.incident_id}: {self.event_type}"
+
+
 class Customer(TimeStampedModel):
     """A customer receiving service from one site in the pilot."""
 
@@ -249,6 +345,65 @@ class Customer(TimeStampedModel):
         return self.name
 
 
+class CustomerNetworkReport(TimeStampedModel):
+    """A network problem reported by a customer through SMS."""
+
+    class Status(models.TextChoices):
+        RECEIVED = "received", "Received"
+        MATCHED = "matched", "Matched"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
+        RESOLVED = "resolved", "Resolved"
+
+    sender_phone = models.CharField(
+        max_length=16,
+        validators=[
+            RegexValidator(
+                regex=r"^\+[1-9][0-9]{7,14}$",
+                message="Use international format, for example +256700123456.",
+            ),
+        ],
+    )
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="network_reports",
+    )
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_network_reports",
+    )
+    incident = models.ForeignKey(
+        Incident,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_network_reports",
+    )
+    message = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.RECEIVED,
+        db_index=True,
+    )
+    link_id = models.CharField(
+        max_length=200,
+        blank=True,
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"Customer report #{self.pk}: {self.status}"
+
+
 class Notification(TimeStampedModel):
     """One SMS for one customer, with approval and delivery tracking."""
 
@@ -264,6 +419,7 @@ class Notification(TimeStampedModel):
 
     class DeliveryStatus(models.TextChoices):
         NOT_SENT = "not_sent", "Not sent"
+        DRY_RUN = "dry_run", "Dry run only"
         QUEUED = "queued", "Queued"
         SENT = "sent", "Accepted by SMS provider"
         DELIVERED = "delivered", "Delivered"

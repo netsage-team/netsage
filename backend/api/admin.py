@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Alert,
     Customer,
+    CustomerNetworkReport,
     Device,
     Incident,
     Notification,
@@ -100,6 +101,30 @@ class CustomerAdmin(admin.ModelAdmin):
     list_filter = ("sms_opt_in", "is_active", "site")
     search_fields = ("name", "phone_number", "site__name")
     list_select_related = ("site",)
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(CustomerNetworkReport)
+class CustomerNetworkReportAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "sender_phone",
+        "customer",
+        "site",
+        "incident",
+        "status",
+        "link_id",
+        "created_at",
+    )
+    list_filter = ("status", "site")
+    search_fields = (
+        "sender_phone",
+        "message",
+        "link_id",
+        "customer__name",
+        "site__name",
+    )
+    list_select_related = ("customer", "site", "incident")
     readonly_fields = ("created_at", "updated_at")
 
 

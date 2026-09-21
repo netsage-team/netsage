@@ -143,3 +143,36 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
+
+
+# NetSage SMS configuration.
+# dry_run never contacts Africa's Talking.
+# sandbox requires an explicit API key and recipient allowlist.
+AFRICASTALKING_USERNAME = os.getenv(
+    "AFRICASTALKING_USERNAME",
+    "sandbox",
+).strip()
+
+AFRICASTALKING_API_KEY = os.getenv(
+    "AFRICASTALKING_API_KEY",
+    "",
+).strip()
+
+NETSAGE_SMS_MODE = os.getenv(
+    "NETSAGE_SMS_MODE",
+    "dry_run",
+).strip().lower()
+
+AFRICASTALKING_SENDER_ID = os.getenv(
+    "AFRICASTALKING_SENDER_ID",
+    "",
+).strip()
+
+AFRICASTALKING_TEST_RECIPIENTS = [
+    phone.strip()
+    for phone in os.getenv(
+        "AFRICASTALKING_TEST_RECIPIENTS",
+        "",
+    ).split(",")
+    if phone.strip()
+]
