@@ -141,6 +141,18 @@ class Incident(TimeStampedModel):
         MONITORING = "monitoring", "Monitoring recovery"
         RESOLVED = "resolved", "Resolved"
 
+    class EscalationLevel(models.TextChoices):
+        NONE = "none", "Not escalated"
+        LEVEL_1 = "level_1", "Level 1"
+        LEVEL_2 = "level_2", "Level 2"
+        LEVEL_3 = "level_3", "Level 3"
+
+    class EscalationStatus(models.TextChoices):
+        NOT_ESCALATED = "not_escalated", "Not escalated"
+        ESCALATED = "escalated", "Escalated"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
+        DISPATCHED = "dispatched", "Technician dispatched"
+
     site = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
@@ -185,6 +197,25 @@ class Incident(TimeStampedModel):
     resolved_at = models.DateTimeField(null=True, blank=True)
     recovery_verified_at = models.DateTimeField(null=True, blank=True)
     resolution_notes = models.TextField(blank=True)
+
+    escalation_level = models.CharField(
+        max_length=20,
+        choices=EscalationLevel.choices,
+        default=EscalationLevel.NONE,
+    )
+    escalation_status = models.CharField(
+        max_length=30,
+        choices=EscalationStatus.choices,
+        default=EscalationStatus.NOT_ESCALATED,
+    )
+    escalation_team = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+    escalated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-opened_at", "-id"]
@@ -246,6 +277,7 @@ class IncidentEvent(models.Model):
     class EventType(models.TextChoices):
         DETECTED = "detected", "Incident detected"
         ASSIGNMENT = "assignment", "Engineer assignment"
+        ESCALATION = "escalation", "Incident escalation"
         STATUS = "status", "Status change"
         NOTE = "note", "Investigation note"
         RECOVERY = "recovery", "Recovery update"
