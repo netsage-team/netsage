@@ -7,6 +7,8 @@ import {
   Routes,
 } from 'react-router-dom'
 import PublicHome from './pages/PublicHome'
+import PredictiveRiskPanel from './components/operations/PredictiveRiskPanel'
+import IncidentImpactPanel from './components/operations/IncidentImpactPanel'
 import {
   Activity,
   AlertTriangle,
@@ -1396,6 +1398,7 @@ function Dashboard({
   const [alerts, setAlerts] = useState([])
   const [incidents, setIncidents] = useState([])
   const [engineers, setEngineers] = useState([])
+  const [predictiveRisk, setPredictiveRisk] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -1445,12 +1448,14 @@ function Dashboard({
         telemetryData,
         alertData,
         incidentData,
+        predictiveRiskData,
       ] = await Promise.all([
         getJson(`/api/dashboard/summary/${query}`),
         getJson(`/api/devices/${query}`),
         getJson(`/api/telemetry/${telemetryQuery}`),
         getJson(`/api/alerts/${query}`),
         getJson(`/api/incidents/${query}`),
+        getJson('/api/predictive-risk/'),
       ])
 
       setSummary(summaryData)
@@ -1458,6 +1463,7 @@ function Dashboard({
       setTelemetry(resultsOf(telemetryData))
       setAlerts(resultsOf(alertData))
       setIncidents(resultsOf(incidentData))
+      setPredictiveRisk(predictiveRiskData)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -1933,6 +1939,12 @@ function Dashboard({
               />
             </section>
 
+            <PredictiveRiskPanel
+              data={predictiveRisk}
+              loading={refreshing}
+              onRefresh={() => loadDashboard(true)}
+            />
+
             <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
               <article className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
@@ -2027,6 +2039,10 @@ function Dashboard({
                             )}
                           </div>
                         )}
+
+                        <IncidentImpactPanel
+                          incident={incident}
+                        />
 
                         <IncidentWorkspace
                           incident={incident}

@@ -163,6 +163,11 @@ NETSAGE_SMS_MODE = os.getenv(
     "dry_run",
 ).strip().lower()
 
+AFRICASTALKING_SENDER_ID = os.getenv(
+    "AFRICASTALKING_SENDER_ID",
+    "",
+).strip()
+
 AFRICASTALKING_TEST_RECIPIENTS = [
     phone.strip()
     for phone in os.getenv(
