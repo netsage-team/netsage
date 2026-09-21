@@ -2,37 +2,58 @@
 
 **Network clarity. Connected communities.**
 
-NetSage is an intelligent network monitoring and incident response platform designed for Internet Service Providers (ISPs).
+NetSage is an intelligent network monitoring, predictive risk, incident response, and customer communication platform designed for Internet Service Providers (ISPs).
 
-It helps network operations teams move from reactive troubleshooting to proactive incident management by monitoring network telemetry, identifying emerging risk, detecting sustained degradation, correlating related site alerts, estimating customer impact, coordinating maintenance response, communicating with customers, and verifying recovery.
+It helps network operations teams move from reactive troubleshooting to proactive service management by monitoring network telemetry, identifying emerging risk, detecting sustained degradation, correlating related alerts, estimating customer impact, coordinating maintenance response, communicating with customers, receiving customer reports, and verifying network recovery.
 
 NetSage was developed for the **Connecting The Future Hackathon 2026** at Uganda Christian University, Mukono.
 
 ---
 
-## The Problem
+# The Problem
 
-Internet Service Providers manage networks made up of many towers, routers, access points, POPs, and shared upstream connections.
+Internet Service Providers operate complex networks made up of towers, routers, switches, access points, POPs, OLTs, ONTs, and shared upstream connections.
 
-When a network problem occurs, operations teams may receive several separate alerts from different locations even when those alerts are caused by one shared infrastructure problem.
+When a network problem occurs, several challenges can appear at the same time:
 
-This creates several challenges:
-
-- Network teams may react only after customers complain.
-- Multiple alerts can hide a single underlying incident.
-- Operators may struggle to identify which areas are affected.
+- Multiple network sites may raise separate alarms even when one shared dependency is responsible.
+- Network teams may only become aware of a problem after customers complain.
+- Operators may struggle to identify which sites and areas are affected.
 - It may be difficult to estimate how many customers are impacted.
-- Maintenance escalation can be slow or inconsistent.
-- Customers may not receive timely service updates.
-- Recovery may be assumed before network stability is actually confirmed.
+- Maintenance escalation may be delayed or inconsistent.
+- Customers may receive little or no information while engineers investigate.
+- Customer complaints may remain disconnected from technical incidents.
+- An incident may be closed before network stability has actually been confirmed.
 
-NetSage brings these activities into one operational workflow.
+Traditional monitoring may tell an operator that a device has failed.
+
+NetSage is designed to answer the larger operational questions:
+
+```text
+What is happening?
+
+Where is it happening?
+
+Are multiple alerts related?
+
+What shared dependency may be responsible?
+
+Which customers may be affected?
+
+Who should respond?
+
+What should customers be told?
+
+What are customers reporting back?
+
+Has the network actually recovered?
+```
 
 ---
 
-## Our Solution
+# The NetSage Solution
 
-NetSage provides an end-to-end network incident workflow:
+NetSage brings network monitoring, incident intelligence, maintenance response, and customer communication into one operational workflow.
 
 ```text
 Network telemetry
@@ -43,7 +64,9 @@ Sustained degradation detection
         ↓
 Alert generation
         ↓
-Multi-site incident correlation
+Multi-site correlation
+        ↓
+Incident creation
         ↓
 Shared dependency reasoning
         ↓
@@ -51,50 +74,67 @@ Customer impact analysis
         ↓
 Maintenance escalation
         ↓
-Customer communication
+Engineer investigation
         ↓
-Customer reports
+Proactive customer communication
+        ↓
+Customer reports and feedback
         ↓
 Recovery verification
+        ↓
+Service restoration communication
         ↓
 Incident resolution
 ```
 
-Instead of treating every degraded network site as an unrelated problem, NetSage identifies relationships between affected sites and helps operators understand the larger operational picture.
+The goal is simple:
+
+> **One network problem should not look like three unrelated alarms.**
 
 ---
 
-## Core Features
+# Core Capabilities
 
-### 1. Real-Time Network Monitoring
+## 1. Multi-Site Network Monitoring
 
-NetSage monitors network telemetry including:
+NetSage provides an operations dashboard for monitoring network infrastructure across multiple locations.
 
+The dashboard displays information such as:
+
+- Site health
+- Device status
 - Latency
 - Packet loss
 - Reachability
-- Site status
-- Device status
+- Active alerts
+- Active incidents
 - Telemetry history
+- Shared dependencies
+- Assigned engineers
+- Incident activity
 
-The operations dashboard provides visibility across multiple network locations.
+This gives network operations teams one place to understand the current state of the network.
 
 ---
 
-### 2. Predictive Network Risk
+## 2. Predictive Network Risk
 
-NetSage analyses recent telemetry trends to identify potential problems before complete service failure.
+NetSage does not only wait for a complete outage.
 
-The current prototype considers:
+The predictive risk engine analyses recent telemetry trends and identifies worsening network conditions while a site may still be reachable.
 
-- Current latency
-- Current packet loss
-- Reachability
-- Rising latency trends
-- Rising packet loss trends
-- Consecutive worsening readings
+The prototype considers:
 
-A site receives an explainable risk score and risk level:
+```text
+Current latency
+Current packet loss
+Reachability
+Latency trend
+Packet loss trend
+Consecutive worsening readings
+```
+
+A site receives an explainable risk score and level:
 
 ```text
 Low
@@ -103,116 +143,179 @@ High
 Critical
 ```
 
-For example:
+Example:
 
 ```text
-Mukono Central
+Site: Mukono Central
 
 Risk score: 62/100
 Risk level: High
-Site reachable: Yes
+Reachable: Yes
 Predicted failure: True
 ```
 
-This allows network teams to begin preventive investigation while connectivity still exists.
+This means the network team can begin preventive investigation before complete service failure.
 
-The hackathon prototype uses an **explainable telemetry trend-based risk engine** rather than a trained black-box machine learning model.
+### Explainable Prediction
 
-In production, the prediction engine can be calibrated using historical ISP telemetry and extended with machine learning models for anomaly detection and failure probability.
+The current prototype uses a transparent telemetry trend-based risk engine.
+
+Every warning includes reasons such as:
+
+```text
+Latency is elevated.
+Packet loss is elevated.
+Latency is rising rapidly.
+Packet loss shows a sustained upward trend.
+Latency increased across recent readings.
+```
+
+The prototype intentionally avoids presenting prediction as a black-box AI model.
+
+In production, the risk engine can be calibrated with historical ISP telemetry and extended with machine learning models for:
+
+- Failure probability
+- Anomaly detection
+- Capacity forecasting
+- Network behaviour modelling
+- Predictive maintenance
 
 ---
 
-### 3. Sustained Degradation Detection
+## 3. Sustained Degradation Detection
 
-NetSage identifies network problems based on sustained abnormal telemetry rather than reacting to a single temporary spike.
+NetSage distinguishes between temporary network spikes and sustained problems.
 
-The demo thresholds are illustrative:
+The current demo uses illustrative thresholds such as:
 
 ```text
 Latency threshold: 150 ms
 Packet loss threshold: 5%
 Sustained degradation duration: 90 seconds
-Telemetry interval: 30 seconds
+Expected telemetry interval: 30 seconds
 ```
 
-These values would be configured together with network engineers in a production deployment.
+A network reading is considered degraded when latency or packet loss exceeds the configured threshold.
+
+An alert is generated only when degradation persists for the required duration.
+
+Production thresholds would be configured together with the ISP's network engineering team.
 
 ---
 
-### 4. Incident Correlation
+## 4. Multi-Site Incident Correlation
 
-One network problem should not look like three unrelated alarms.
+A major NetSage capability is recognizing when several site alerts may represent one underlying network problem.
 
-In the NetSage demo topology:
+The demo topology contains:
 
 ```text
 Mukono Central ─┐
+                │
 Seeta           ├── Mukono Shared Uplink
+                │
 UCU Area        ┘
 ```
 
-If all three sites experience related degradation, NetSage can correlate their alerts into one incident and identify the shared upstream dependency as a probable cause indicator.
+If all three sites experience related degradation, NetSage can correlate the alerts into a single incident.
 
-This helps reduce alert noise and gives engineers a clearer incident context.
+Instead of showing:
+
+```text
+Alert 1: Mukono Central
+Alert 2: Seeta
+Alert 3: UCU Area
+```
+
+NetSage presents:
+
+```text
+One correlated incident
+
+Affected sites:
+- Mukono Central
+- Seeta
+- UCU Area
+
+Shared dependency:
+Mukono Shared Uplink
+```
+
+This helps reduce alert noise and gives engineers a clearer operational picture.
 
 ---
 
-### 5. Multi-Site Visibility
+# Customer Impact Intelligence
 
-The operations dashboard shows:
-
-- Healthy sites
-- Degraded sites
-- Active alerts
-- Active incidents
-- Shared network dependencies
-- Affected locations
-- Telemetry trends
-- Incident severity
-- Assigned engineer
-- Incident lifecycle
-
----
-
-### 6. Customer Impact Analysis
-
-NetSage connects network incidents with customer records associated with affected sites.
+NetSage connects network incidents with customers associated with affected sites.
 
 For each incident, the platform can calculate:
 
-- Number of affected sites
-- Number of affected areas
-- Customers potentially affected
-- Customers eligible for SMS
-- Customer reports received
-- Reporting customers
-- Site-by-site customer impact
+```text
+Affected sites
+Affected areas
+Potentially affected customers
+SMS-eligible customers
+Customer reports received
+Reporting customers
+Customer impact per site
+```
 
 Example:
 
 ```text
 Affected sites: 3
+Affected areas: 3
 Potentially affected customers: 6
 SMS eligible customers: 1
 Customer reports received: 2
 ```
 
-This allows operations teams to understand both the technical and customer impact of an incident.
+This allows an ISP to understand the customer impact of a technical problem rather than only seeing infrastructure alarms.
 
 ---
 
-### 7. Maintenance Escalation
+# Site-Level Impact Breakdown
+
+NetSage can show customer impact for each affected site individually.
+
+Example:
+
+```text
+Mukono Central
+Customers: 4
+SMS eligible: 1
+Reports: 2
+
+Seeta
+Customers: 1
+SMS eligible: 0
+Reports: 0
+
+UCU Area
+Customers: 1
+SMS eligible: 0
+Reports: 0
+```
+
+This can help operations teams prioritize response based on actual customer exposure.
+
+---
+
+# Maintenance Escalation
 
 NetSage includes an explainable operational escalation engine.
 
-The recommendation considers:
+The recommendation can consider:
 
-- Incident severity
-- Number of affected sites
-- Number of potentially affected customers
-- Customer reports
+```text
+Incident severity
+Number of affected sites
+Number of potentially affected customers
+Number of customer reports
+```
 
-Escalation levels include:
+Supported escalation levels include:
 
 ```text
 Level 1
@@ -225,27 +328,46 @@ Level 3
 Senior Network Operations and Field Maintenance
 ```
 
-NetSage can automatically apply operational escalation while infrastructure-changing actions remain under human control.
+Example:
 
-The platform also records escalation events in the incident timeline.
+```text
+Recommended escalation:
+Level 2
+
+Team:
+Regional Network Operations and Maintenance
+
+Response:
+Begin investigation and prepare technician dispatch
+if remote recovery is unsuccessful.
+```
+
+NetSage records escalation decisions in the incident activity timeline.
+
+Infrastructure-changing actions remain under the control of authorized network engineers.
 
 ---
 
-### 8. Engineer Assignment and Incident Workflow
+# Incident Response Workflow
 
-Operators can:
+NetSage supports the operational lifecycle of an incident.
 
+An operator can:
+
+- Review incident severity
+- Review affected sites
+- Review probable cause
+- Review customer impact
+- Review maintenance recommendation
 - Assign an engineer
 - Start investigation
-- Add incident notes
-- Review probable causes
-- Review affected sites
-- Review customer impact
-- Monitor maintenance escalation
+- Add investigation notes
+- View customer reports
+- Send customer updates
 - Verify recovery
-- Resolve incidents
+- Resolve the incident
 
-Typical incident lifecycle:
+Typical workflow:
 
 ```text
 Open
@@ -259,37 +381,175 @@ Resolved
 
 ---
 
-## Customer Communication
+# Engineer Assignment
 
-NetSage integrates with **Africa's Talking SMS**.
+Incidents can be assigned to engineers directly from the operations dashboard.
 
-The platform supports both directions of communication.
-
-### NetSage → Customer
-
-NetSage can proactively notify customers before they contact the provider.
-
-Supported communication types include:
+Example:
 
 ```text
-Outage notification
-Service update
-Recovery notification
+Incident:
+Correlated network degradation affecting
+Mukono Central, Seeta, UCU Area
+
+Assigned engineer:
+dev_cee
+
+Status:
+Investigating
 ```
 
-Example proactive message:
+This creates clear operational ownership.
+
+---
+
+# Incident Activity Timeline
+
+NetSage records important events throughout an incident.
+
+Timeline events can include:
 
 ```text
-NetSage Alert: We detected a network issue affecting your area.
+Incident detected
+Engineer assigned
+Investigation started
+Operator note added
+Maintenance escalation
+Customer communication
+Recovery verified
+Incident resolved
+```
+
+This creates an operational history that can later support:
+
+- Incident reviews
+- Performance analysis
+- SLA reporting
+- Root cause analysis
+- Operations training
+
+---
+
+# Customer Communication
+
+NetSage integrates with **Africa's Talking SMS** to support two-way communication between an ISP and affected customers.
+
+Both directions are supported:
+
+```text
+NetSage → Customer
+
+Customer → NetSage
+```
+
+This means proactive provider communication does not remove the customer's ability to report problems.
+
+---
+
+# Proactive Customer Notifications
+
+One of the main NetSage goals is to reduce the dependence on customer complaints as the first outage signal.
+
+Once an incident is known, NetSage can identify eligible affected customers and allow the operations team to notify them proactively.
+
+Example:
+
+```text
+NetSage Alert:
+
+We detected a network issue affecting
+Mukono Central, Seeta and UCU Area.
+
 Our technical team is already investigating.
 We will keep you updated.
 ```
 
-This allows the provider to communicate before customers begin calling support.
+The customer can receive this message before contacting the ISP.
 
 ---
 
-### Customer → NetSage
+# Customer Communication Stages
+
+NetSage supports three main communication stages.
+
+## Outage Notification
+
+Example:
+
+```text
+NetSage Alert:
+
+We have detected a connectivity issue affecting your area.
+Our technical team has been notified and is investigating.
+We will keep you updated.
+```
+
+## Progress Update
+
+Example:
+
+```text
+Network Update:
+
+Our technical team is investigating the connectivity issue
+affecting your area.
+
+Service restoration is in progress.
+We will keep you informed.
+```
+
+## Recovery Notification
+
+Example:
+
+```text
+Service Restored:
+
+Connectivity in your area has recovered.
+
+Thank you for your patience.
+```
+
+---
+
+# SMS Approval Workflow
+
+NetSage includes an approval workflow before customer notifications are sent.
+
+```text
+Create draft
+     ↓
+Approve message
+     ↓
+Send
+     ↓
+Track delivery
+```
+
+This prevents uncontrolled automated messaging while still allowing NetSage to automate audience identification and communication preparation.
+
+---
+
+# SMS Delivery Tracking
+
+Customer notifications can be tracked through states such as:
+
+```text
+Not Sent
+Dry Run
+Queued
+Sent
+Delivered
+Failed
+```
+
+NetSage stores provider message identifiers and delivery information where available.
+
+The operations dashboard displays communication activity for each incident.
+
+---
+
+# Customer-to-NetSage SMS
 
 Customers can also report network problems through SMS.
 
@@ -297,99 +557,177 @@ Example:
 
 ```text
 Customer:
+
 Internet still slow in Mukono
 ```
 
-NetSage can:
+Africa's Talking forwards the incoming SMS to NetSage.
 
-1. Receive the incoming SMS.
-2. Identify the customer from the phone number.
-3. Identify the customer's network site.
-4. Match the report to an existing active incident.
-5. Store the report.
-6. Automatically acknowledge the customer.
+NetSage then:
+
+```text
+Receives the message
+        ↓
+Identifies the customer
+        ↓
+Identifies the customer's site
+        ↓
+Finds a relevant active incident
+        ↓
+Links the report to that incident
+        ↓
+Stores the report
+        ↓
+Automatically acknowledges the customer
+```
 
 Example acknowledgement:
 
 ```text
-NetSage: We received your network report.
+NetSage:
+
+We received your network report.
 Our team is checking the issue.
+
 Thank you for letting us know.
-```
-
-This creates a two-way communication loop:
-
-```text
-NetSage → Customer
-Customer → NetSage
 ```
 
 ---
 
-## Africa's Talking Integration
+# Customer Reports Dashboard
 
-The hackathon prototype uses the **Africa's Talking Sandbox**.
+Incoming customer reports are available to network operations teams.
 
-The tested demo flow is:
+Reports can contain information such as:
+
+```text
+Customer
+Phone number
+Network site
+Message
+Related incident
+Report status
+Time received
+```
+
+This allows engineers to combine technical telemetry with customer experience.
+
+A customer complaint therefore becomes part of the incident context rather than remaining isolated inside a customer support channel.
+
+---
+
+# Customer Incident Progress Updates
+
+NetSage can also support customer communication as the incident progresses.
+
+The system can connect incident status changes with customer communication so affected users can remain informed while maintenance work continues.
+
+This creates a communication lifecycle such as:
+
+```text
+Incident detected
+        ↓
+Customer notified
+        ↓
+Engineer investigates
+        ↓
+Progress update
+        ↓
+Customer reports received
+        ↓
+Recovery verified
+        ↓
+Service restored notification
+```
+
+---
+
+# Africa's Talking Integration
+
+The prototype integrates with the **Africa's Talking Sandbox SMS API**.
+
+The tested outbound flow is:
 
 ```text
 NetSage
    ↓
 Africa's Talking SMS API
    ↓
-Sandbox Shortcode
+Sandbox shortcode
    ↓
-Customer Simulator
+Customer simulator
 ```
 
-Incoming communication follows:
+The tested incoming flow is:
 
 ```text
-Customer Simulator
+Customer simulator
    ↓
-Sandbox Shortcode
+Sandbox shortcode
    ↓
 Africa's Talking
    ↓
-Public webhook
+Public callback
    ↓
-NetSage
+ngrok
+   ↓
+NetSage Django API
+   ↓
+Customer report matching
+   ↓
+Automatic acknowledgement
 ```
 
-For local development, a tool such as **ngrok** can expose the Django webhook endpoints.
-
-### Incoming SMS Callback
-
-```text
-/api/sms/incoming/
-```
-
-### Delivery Report Callback
-
-```text
-/api/sms/delivery-report/
-```
-
-The exact public domain changes depending on the development tunnel being used.
+This provides a complete two-way SMS communication loop.
 
 ---
 
-## Recovery Verification
+# SMS Callback Endpoints
 
-NetSage does not consider an incident recovered simply because an engineer believes the problem has been fixed.
+## Incoming SMS
 
-The platform verifies sustained healthy telemetry across all affected sites.
+```text
+POST /api/sms/incoming/
+```
 
-Current demo recovery conditions include:
+## Delivery Reports
+
+```text
+POST /api/sms/delivery-report/
+```
+
+When running locally, these endpoints can be exposed to Africa's Talking through ngrok.
+
+Example:
+
+```text
+https://YOUR-NGROK-DOMAIN/api/sms/incoming/
+
+https://YOUR-NGROK-DOMAIN/api/sms/delivery-report/
+```
+
+The ngrok domain may change whenever a new tunnel is started.
+
+Do not hard-code temporary development tunnel URLs into production configuration.
+
+---
+
+# Recovery Verification
+
+NetSage does not consider an incident fixed simply because an engineer believes the problem has been solved.
+
+The recovery engine checks for sustained healthy telemetry across every affected site.
+
+The current demo recovery rules include:
 
 ```text
 Latency <= 150 ms
 Packet loss <= 5%
-Healthy duration >= 180 seconds
+Healthy period >= 180 seconds
 Telemetry interval = 30 seconds
 ```
 
-All affected sites must satisfy the recovery condition.
+For a three-site incident, every affected site must recover.
 
 Example:
 
@@ -397,22 +735,26 @@ Example:
 Mukono Central → Recovered
 Seeta → Recovered
 UCU Area → Recovered
+
+Overall recovery:
+True
 ```
 
-After recovery is verified, the incident can move into monitoring and customers can receive a service restoration message.
-
-Example:
+Once recovery is verified, the incident can move from:
 
 ```text
-Service Restored: Connectivity in your area has recovered.
-Thank you for your patience.
+Investigating
+      ↓
+Monitoring
 ```
+
+A recovery notification can then be sent to customers.
 
 ---
 
-## Demo Network
+# Demo Network Topology
 
-The main NetSage demonstration uses three sites:
+The primary NetSage demonstration uses:
 
 ```text
 Mukono Central
@@ -426,206 +768,347 @@ Shared dependency:
 Mukono Shared Uplink
 ```
 
-The demo illustrates how one shared infrastructure problem can affect several network locations at the same time.
-
----
-
-## Demo Story
-
-A typical NetSage live demo follows this sequence:
+Conceptually:
 
 ```text
-1. Network is monitored.
-
-2. Telemetry begins worsening.
-
-3. NetSage raises a predictive warning while the site is still reachable.
-
-4. Sustained degradation occurs.
-
-5. Multiple site alerts are generated.
-
-6. NetSage correlates the alerts into one incident.
-
-7. The shared dependency is identified.
-
-8. Customer impact is calculated.
-
-9. Maintenance escalation is recommended or applied.
-
-10. NetSage proactively sends affected customers an SMS.
-
-11. Customers can reply through SMS.
-
-12. Their reports are linked to the existing incident.
-
-13. Engineers investigate the incident.
-
-14. Healthy telemetry returns.
-
-15. NetSage verifies sustained recovery.
-
-16. Customers receive a recovery notification.
-
-17. The incident is resolved.
+                 INTERNET / CORE NETWORK
+                          │
+                          │
+                Mukono Shared Uplink
+                          │
+           ┌──────────────┼──────────────┐
+           │              │              │
+           ▼              ▼              ▼
+     Mukono Central      Seeta         UCU Area
+           │              │              │
+        Customers      Customers      Customers
 ```
 
 ---
 
-## Technology Stack
+# Complete Demo Scenario
 
-### Frontend
-
-- React
-- Vite
-- Tailwind CSS
-- React Router
-- Lucide React
-- Recharts
-
-### Backend
-
-- Python
-- Django
-- Django REST Framework
-
-### Database
-
-- SQLite for the hackathon prototype
-- Production deployments can use PostgreSQL
-
-### Messaging
-
-- Africa's Talking SMS API
-
-### Development and Deployment Tools
-
-- Git
-- GitHub
-- Docker-ready architecture
-- ngrok for local webhook exposure
-
----
-
-## Architecture
+The complete NetSage demo can follow this story:
 
 ```text
-                 NETWORK INFRASTRUCTURE
-                         │
-       ┌─────────────────┼─────────────────┐
-       │                 │                 │
-    Routers           Switches          OLTs/ONTs
-       │                 │                 │
-       └─────────────────┼─────────────────┘
-                         │
-               Telemetry / NMS / SNMP
-                         │
-                         ▼
-                    NETSAGE API
-                         │
-            ┌────────────┼────────────┐
-            │            │            │
-            ▼            ▼            ▼
-       Prediction    Detection    Correlation
-            │            │            │
-            └────────────┼────────────┘
-                         │
-                         ▼
-                   INCIDENT ENGINE
-                         │
-           ┌─────────────┼─────────────┐
-           │             │             │
-           ▼             ▼             ▼
-      Customer       Maintenance    Engineer
-       Impact        Escalation     Workflow
-           │             │             │
-           └─────────────┼─────────────┘
-                         │
-                         ▼
-                AFRICA'S TALKING
-                         │
-                  SMS Communication
-                         │
-               ┌─────────┴─────────┐
-               ▼                   ▼
-          ISP → Customer      Customer → ISP
+1. Network telemetry is collected.
+
+2. Latency and packet loss begin worsening.
+
+3. NetSage raises an early predictive warning.
+
+4. The site may still be reachable.
+
+5. Degradation becomes sustained.
+
+6. Alerts are generated across multiple sites.
+
+7. NetSage identifies that the sites share
+   the Mukono Shared Uplink.
+
+8. Multiple alerts are correlated into one incident.
+
+9. NetSage calculates network and customer impact.
+
+10. A maintenance escalation level is recommended.
+
+11. An engineer is assigned.
+
+12. NetSage can proactively notify affected customers.
+
+13. Customers receive an SMS before needing to complain.
+
+14. Customers can still reply with their own reports.
+
+15. NetSage identifies the customer and site.
+
+16. The report is linked to the existing incident.
+
+17. NetSage automatically acknowledges the customer.
+
+18. Engineers investigate the fault.
+
+19. Progress updates can be communicated to customers.
+
+20. Healthy telemetry returns.
+
+21. NetSage verifies sustained recovery across every site.
+
+22. Customers receive a service restoration message.
+
+23. The incident is resolved.
 ```
 
 ---
 
-## Hardware and Production Integration
+# Architecture
+
+```text
+                    ISP NETWORK INFRASTRUCTURE
+                              │
+         ┌────────────────────┼────────────────────┐
+         │                    │                    │
+      Routers              Switches             OLTs
+         │                    │                    │
+         └────────────────────┼────────────────────┘
+                              │
+                  Telemetry / NMS / SNMP
+                              │
+                              ▼
+                       NETSAGE BACKEND
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+          ▼                   ▼                   ▼
+    Predictive Risk       Detection          Correlation
+          │                   │                   │
+          └───────────────────┼───────────────────┘
+                              │
+                              ▼
+                       INCIDENT ENGINE
+                              │
+       ┌──────────────────────┼──────────────────────┐
+       │                      │                      │
+       ▼                      ▼                      ▼
+ Customer Impact      Maintenance Response     Engineer Workflow
+       │                      │                      │
+       └──────────────────────┼──────────────────────┘
+                              │
+                              ▼
+                    CUSTOMER COMMUNICATION
+                              │
+                   Africa's Talking SMS
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+                    ▼                   ▼
+             NetSage → Customer   Customer → NetSage
+                    │                   │
+                    └─────────┬─────────┘
+                              │
+                              ▼
+                     INCIDENT TIMELINE
+                              │
+                              ▼
+                    RECOVERY VERIFICATION
+```
+
+---
+
+# Technology Stack
+
+## Frontend
+
+```text
+React
+Vite
+Tailwind CSS
+React Router
+Lucide React
+Recharts
+```
+
+## Backend
+
+```text
+Python
+Django
+Django REST Framework
+```
+
+## Database
+
+The hackathon prototype uses:
+
+```text
+SQLite
+```
+
+A production deployment can use:
+
+```text
+PostgreSQL
+```
+
+## Messaging
+
+```text
+Africa's Talking SMS API
+```
+
+## Development Tools
+
+```text
+Git
+GitHub
+ngrok
+Docker-ready project structure
+```
+
+---
+
+# Hardware and Production Integration
 
 NetSage is primarily a software platform.
 
-A production implementation can integrate with existing ISP infrastructure such as:
-
-- Routers
-- Switches
-- OLTs
-- ONTs
-- Wireless access equipment
-- Network Management Systems
-- SNMP-enabled infrastructure
-- Syslog sources
-- Vendor APIs
-
-Where additional visibility is required, low-cost edge monitoring devices can also be deployed.
+It is designed to integrate with infrastructure that ISPs already operate.
 
 Examples include:
 
-- Raspberry Pi monitoring probes
-- IoT sensors
-- Power monitoring devices
-- Environmental sensors
+```text
+Routers
+Switches
+OLTs
+ONTs
+Wireless access equipment
+Network Management Systems
+SNMP-enabled equipment
+Syslog sources
+Vendor APIs
+```
 
-These devices could monitor:
+Where additional visibility is needed, an ISP can deploy low-cost edge monitoring hardware such as:
 
-- Latency
-- Packet loss
-- Reachability
-- Link availability
-- Power availability
-- Temperature
-- Equipment conditions
+```text
+Raspberry Pi monitoring probes
+IoT sensors
+Power monitoring sensors
+Environmental sensors
+```
 
-For this hackathon prototype, **network telemetry is simulated**.
+These devices could provide information such as:
 
-The NetSage detection, prediction, correlation, database, incident workflow, customer impact analysis, SMS integration, incoming customer reports, maintenance escalation, and recovery verification are implemented application features.
+```text
+Latency
+Packet loss
+Reachability
+Link availability
+Power availability
+Temperature
+Equipment conditions
+```
+
+For the hackathon prototype, network telemetry is simulated.
+
+The NetSage application logic processes that telemetry through real application workflows.
 
 ---
 
-## Project Structure
+# Prototype Transparency
+
+The current hackathon prototype uses **simulated network telemetry**.
+
+This allows the team to demonstrate realistic network degradation and recovery scenarios without requiring access to a live ISP network.
+
+Implemented application capabilities include:
+
+```text
+Telemetry storage
+Predictive risk analysis
+Sustained degradation detection
+Alert generation
+Multi-site incident correlation
+Shared dependency reasoning
+Incident management
+Engineer assignment
+Incident timeline
+Customer impact calculation
+Maintenance escalation
+Proactive SMS notifications
+SMS approval workflow
+SMS delivery tracking
+Incoming customer SMS
+Customer report matching
+Automatic customer acknowledgement
+Customer reports dashboard
+Customer incident progress updates
+Recovery verification
+Operational history
+```
+
+Production integration would replace or supplement simulated telemetry with real ISP network data.
+
+---
+
+# Production Data Sources
+
+A production version of NetSage could receive telemetry from:
+
+```text
+SNMP
+Network Management Systems
+Router APIs
+Switch APIs
+OLT/ONT platforms
+Syslog
+Streaming telemetry
+Vendor APIs
+Edge monitoring probes
+```
+
+---
+
+# Project Structure
 
 ```text
 netsage/
 │
 ├── backend/
+│   │
 │   ├── api/
 │   │   ├── management/
+│   │   │   └── commands/
+│   │   │
 │   │   ├── migrations/
+│   │   │
 │   │   ├── services/
-│   │   ├── models.py
-│   │   ├── urls.py
-│   │   ├── predictive_views.py
+│   │   │   ├── customer_incident_updates.py
+│   │   │   ├── customer_report_acknowledgement.py
+│   │   │   ├── customer_reports.py
+│   │   │   ├── predictive_risk.py
+│   │   │   ├── recovery.py
+│   │   │   ├── simulator_adapter.py
+│   │   │   └── sms.py
+│   │   │
+│   │   ├── delivery_views.py
 │   │   ├── impact_views.py
-│   │   └── incoming_views.py
+│   │   ├── incoming_views.py
+│   │   ├── models.py
+│   │   ├── notification_views.py
+│   │   ├── operations_views.py
+│   │   ├── predictive_views.py
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   └── views.py
 │   │
 │   ├── config/
+│   │
 │   └── manage.py
 │
 ├── frontend/
+│   │
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── marketing/
 │   │   │   └── operations/
-│   │   │       ├── PredictiveRiskPanel.jsx
-│   │   │       └── IncidentImpactPanel.jsx
+│   │   │       ├── IncidentImpactPanel.jsx
+│   │   │       └── PredictiveRiskPanel.jsx
+│   │   │
 │   │   ├── pages/
+│   │   ├── api.js
 │   │   ├── App.jsx
-│   │   └── api.js
+│   │   └── index.css
 │   │
 │   └── package.json
 │
 ├── simulator/
+│   ├── example_payloads/
+│   ├── tests/
+│   ├── cli.py
+│   ├── detection.py
+│   ├── generator.py
+│   ├── models.py
+│   └── topology.py
 │
 ├── docs/
 │
@@ -634,21 +1117,23 @@ netsage/
 
 ---
 
-# Local Development
+# Getting Started
 
 ## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/netsage-team/netsage.git
+
 cd netsage
 ```
 
 ---
 
-## 2. Create the Python Virtual Environment
+## 2. Create a Python Virtual Environment
 
 ```bash
 python3 -m venv .venv
+
 source .venv/bin/activate
 ```
 
@@ -656,9 +1141,17 @@ source .venv/bin/activate
 
 ## 3. Install Backend Dependencies
 
-Install the Python dependencies configured for the project.
+Install the backend dependencies defined by the project.
 
-Then apply migrations:
+Then verify Django:
+
+```bash
+python backend/manage.py check
+```
+
+---
+
+## 4. Apply Database Migrations
 
 ```bash
 python backend/manage.py migrate
@@ -666,7 +1159,7 @@ python backend/manage.py migrate
 
 ---
 
-## 4. Seed Demo Data
+## 5. Seed Demo Data
 
 ```bash
 python backend/manage.py seed_demo
@@ -674,7 +1167,7 @@ python backend/manage.py seed_demo
 
 ---
 
-## 5. Start Django
+## 6. Start the Django Backend
 
 ```bash
 python backend/manage.py runserver
@@ -683,12 +1176,12 @@ python backend/manage.py runserver
 Backend:
 
 ```text
-http://127.0.0.1:8000
+http://127.0.0.1:8000/
 ```
 
 ---
 
-## 6. Install Frontend Dependencies
+## 7. Install Frontend Dependencies
 
 ```bash
 npm --prefix frontend install
@@ -696,7 +1189,7 @@ npm --prefix frontend install
 
 ---
 
-## 7. Start the Frontend
+## 8. Start the Frontend
 
 ```bash
 npm --prefix frontend run dev
@@ -705,7 +1198,7 @@ npm --prefix frontend run dev
 Frontend:
 
 ```text
-http://127.0.0.1:5173
+http://127.0.0.1:5173/
 ```
 
 Operations dashboard:
@@ -716,29 +1209,43 @@ http://127.0.0.1:5173/operations
 
 ---
 
-## 8. Start ngrok for SMS Webhooks
+# Running the Three Demo Terminals
+
+For SMS integration and local development, three terminals are useful.
+
+## Terminal 1 — Django
+
+```bash
+cd ~/Projects/netsage
+
+source .venv/bin/activate
+
+python backend/manage.py runserver
+```
+
+## Terminal 2 — React/Vite
+
+```bash
+cd ~/Projects/netsage
+
+npm --prefix frontend run dev
+```
+
+## Terminal 3 — ngrok
 
 ```bash
 ngrok http 8000
 ```
 
-Configure the resulting public domain in the Africa's Talking Sandbox.
-
-Example:
+The ngrok URL forwards public webhook requests to:
 
 ```text
-Incoming SMS:
-https://YOUR-NGROK-DOMAIN/api/sms/incoming/
-
-Delivery report:
-https://YOUR-NGROK-DOMAIN/api/sms/delivery-report/
+http://localhost:8000
 ```
-
-Never commit temporary ngrok URLs as production configuration.
 
 ---
 
-# Environment Variables
+# Environment Configuration
 
 Create:
 
@@ -746,12 +1253,13 @@ Create:
 backend/.env
 ```
 
-Example configuration:
+Example:
 
 ```env
 NETSAGE_SMS_MODE=sandbox
 
 AFRICASTALKING_USERNAME=sandbox
+
 AFRICASTALKING_API_KEY=YOUR_SANDBOX_API_KEY
 
 AFRICASTALKING_TEST_RECIPIENTS=+256XXXXXXXXX
@@ -759,176 +1267,569 @@ AFRICASTALKING_TEST_RECIPIENTS=+256XXXXXXXXX
 AFRICASTALKING_SENDER_ID=YOUR_SANDBOX_SHORTCODE
 ```
 
-Never commit `.env` files or API keys to Git.
+Never commit the real `.env` file or API keys.
 
-For development without external SMS:
+The repository should only contain a safe example configuration such as:
+
+```text
+backend/.env.example
+```
+
+---
+
+# SMS Modes
+
+NetSage supports safe development modes.
+
+## Dry Run
 
 ```env
 NETSAGE_SMS_MODE=dry_run
 ```
 
+No external SMS request is made.
+
+This is useful for development and automated testing.
+
+## Africa's Talking Sandbox
+
+```env
+NETSAGE_SMS_MODE=sandbox
+```
+
+Sandbox mode:
+
+- Uses Africa's Talking sandbox credentials
+- Restricts sending to explicitly allowlisted test recipients
+- Supports sandbox shortcode testing
+- Supports the Africa's Talking Simulator
+
+---
+
+# Africa's Talking Sandbox Setup
+
+Configure the public webhook endpoints in the Africa's Talking Sandbox dashboard.
+
+Example:
+
+```text
+Incoming SMS callback:
+
+https://YOUR-NGROK-DOMAIN/api/sms/incoming/
+```
+
+```text
+Delivery report callback:
+
+https://YOUR-NGROK-DOMAIN/api/sms/delivery-report/
+```
+
+The configured sandbox shortcode is used as the outbound sender during simulator testing.
+
 ---
 
 # Predictive Warning Demo
 
-To generate worsening but still reachable telemetry:
+Generate worsening but still reachable telemetry:
 
 ```bash
 python backend/manage.py seed_predictive_warning
 ```
 
-A demo result may look like:
+A successful example can produce:
 
 ```text
-Site: Mukono Central
-Risk score: 62/100
-Risk level: high
-Predicted failure: True
+Predictive warning telemetry created.
+
+Site:
+Mukono Central
+
+Risk score:
+62/100
+
+Risk level:
+high
+
+Predicted failure:
+True
 ```
 
-This demonstrates that NetSage can raise a warning before complete network failure.
+This demonstrates an important NetSage principle:
+
+> **The provider should not have to wait for complete failure before investigating.**
 
 ---
 
-# Incident Demo
+# Incident Correlation Demo
 
-Run the existing demo scenario:
+Run:
 
 ```bash
 python backend/manage.py run_demo_scenario
 ```
 
-This simulates network degradation and demonstrates alert detection and incident correlation.
-
----
-
-# API Highlights
+The simulator creates a network scenario involving:
 
 ```text
-GET  /api/health/
-
-GET  /api/dashboard/summary/
-
-GET  /api/sites/
-GET  /api/devices/
-GET  /api/telemetry/
-GET  /api/alerts/
-GET  /api/incidents/
-
-GET  /api/predictive-risk/
-
-GET  /api/incidents/<id>/impact/
-POST /api/incidents/<id>/impact/
-
-POST /api/sms/incoming/
-POST /api/sms/delivery-report/
-
-POST /api/notification-draft/
-POST /api/notification-approve/
-POST /api/notification-send/
-GET  /api/notification-history/
+Mukono Central
+Seeta
+UCU Area
 ```
 
-Authenticated operational endpoints are restricted to staff users.
+NetSage processes the generated telemetry, detects sustained degradation, creates alerts, and correlates the affected sites into an incident.
+
+A successful scenario may report:
+
+```text
+Sites: 3
+Devices: 3
+Telemetry readings: 108
+Alerts: 3
+Incidents: 1
+```
 
 ---
 
-# Running Checks
+# Recovery Demo
 
-Backend:
+The recovery engine expects sustained healthy telemetry.
+
+Demo thresholds:
+
+```text
+Latency <= 150 ms
+Packet loss <= 5%
+Recovery duration >= 180 seconds
+```
+
+Recovery is verified across every affected site before the incident can move into monitoring.
+
+---
+
+# Important API Endpoints
+
+## Health
+
+```text
+GET /api/health/
+```
+
+## Dashboard Summary
+
+```text
+GET /api/dashboard/summary/
+```
+
+## Sites
+
+```text
+GET /api/sites/
+```
+
+## Devices
+
+```text
+GET /api/devices/
+```
+
+## Telemetry
+
+```text
+GET /api/telemetry/
+```
+
+## Alerts
+
+```text
+GET /api/alerts/
+```
+
+## Incidents
+
+```text
+GET /api/incidents/
+```
+
+## Engineers
+
+```text
+GET /api/engineers/
+```
+
+## Customer Reports
+
+```text
+GET /api/customer-reports/
+```
+
+## Predictive Risk
+
+```text
+GET /api/predictive-risk/
+```
+
+## Incident Impact
+
+```text
+GET /api/incidents/<incident_id>/impact/
+```
+
+## Escalation Update
+
+```text
+POST /api/incidents/<incident_id>/impact/
+```
+
+## Incoming SMS
+
+```text
+POST /api/sms/incoming/
+```
+
+## Delivery Report
+
+```text
+POST /api/sms/delivery-report/
+```
+
+## Notification Workflow
+
+```text
+POST /api/notification-draft/
+
+POST /api/notification-approve/
+
+POST /api/notification-send/
+
+GET /api/notification-history/
+```
+
+Operational endpoints are protected using application authentication and staff permissions where appropriate.
+
+---
+
+# Testing
+
+Run backend checks:
 
 ```bash
 python backend/manage.py check
 ```
 
-Frontend production build:
+Run the backend test suite:
+
+```bash
+python backend/manage.py test api
+```
+
+At the final integration stage, the NetSage API suite contained:
+
+```text
+83 tests
+```
+
+and passed successfully.
+
+---
+
+# Frontend Production Build
+
+Run:
 
 ```bash
 npm --prefix frontend run build
 ```
 
-Git whitespace check:
+The Vite build currently completes successfully.
+
+A large JavaScript bundle warning may appear during the build.
+
+That warning does not prevent the build from succeeding and can be addressed later through code splitting and lazy loading.
+
+---
+
+# Git Validation
+
+Before committing:
 
 ```bash
 git diff --check
 ```
 
----
+Check status:
 
-# Product Principles
+```bash
+git status
+```
 
-NetSage is built around several principles:
+The repository uses:
 
-### Explainability
+```text
+feature branches
+        ↓
+dev
+        ↓
+main
+```
 
-Network engineers should understand why a warning or escalation was generated.
+Feature work should normally be merged into `dev` first.
 
-### Human-Controlled Infrastructure Actions
-
-NetSage can automate monitoring, correlation, impact analysis, recommendations, escalation, and communication workflows.
-
-Infrastructure-changing remediation should remain controlled by authorized network engineers.
-
-### Customer Communication
-
-Customers should not always have to be the first people to report an outage.
-
-Providers should be able to communicate proactively while still allowing customers to report problems through accessible channels such as SMS.
-
-### Recovery Verification
-
-An incident should not be considered fixed until network telemetry supports that conclusion.
+The integrated `dev` branch should be tested before promotion to `main`.
 
 ---
 
-# Current Prototype vs Production Deployment
+# Git Branch Strategy
 
-## Implemented in the Prototype
+```text
+main
+│
+└── Stable integrated release
+```
 
-- Multi-site network monitoring
-- Simulated telemetry
-- Latency and packet loss tracking
-- Sustained degradation detection
-- Predictive telemetry risk analysis
-- Alert generation
-- Incident correlation
-- Shared dependency reasoning
-- Incident lifecycle management
-- Engineer assignment
-- Incident notes and timeline
-- Customer records
-- Customer impact analysis
-- Maintenance escalation
-- Proactive customer SMS
-- Incoming customer SMS reports
-- Customer-to-incident matching
-- Automatic SMS acknowledgements
-- Africa's Talking Sandbox integration
-- SMS delivery tracking
-- Recovery verification
-- Operational history
+```text
+dev
+│
+└── Team integration and testing
+```
 
-## Production Extensions
+```text
+feature/*
+│
+└── Individual feature development
+```
 
-A production ISP deployment can add:
+Typical workflow:
 
-- Real SNMP telemetry
-- Router integrations
-- Switch integrations
-- OLT/ONT integrations
-- NMS integrations
-- Vendor APIs
-- Streaming telemetry
-- Historical network datasets
-- Machine learning models
-- Advanced anomaly detection
-- Automated maintenance ticketing
-- GIS/network topology data
-- Additional communication channels
-- Advanced reporting and analytics
-- High availability deployment
-- PostgreSQL
-- Cloud infrastructure
+```text
+feature branch
+      ↓
+Pull Request
+      ↓
+dev
+      ↓
+Integration testing
+      ↓
+dev → main Pull Request
+      ↓
+main
+```
+
+---
+
+# Main Product Principles
+
+## Proactive Rather Than Reactive
+
+Customers should not always have to report the outage first.
+
+NetSage aims to identify network risk and incidents as early as possible.
+
+---
+
+## Explainability
+
+Engineers should understand why NetSage:
+
+```text
+Raised a warning
+Created an alert
+Correlated an incident
+Recommended an escalation
+Verified recovery
+```
+
+---
+
+## Customer Awareness
+
+Technical network problems should be connected to customer impact.
+
+NetSage therefore combines:
+
+```text
+Infrastructure telemetry
++
+Customer records
++
+Customer communication
++
+Customer reports
+```
+
+---
+
+## Human Control
+
+NetSage can automate:
+
+```text
+Monitoring
+Risk calculation
+Detection
+Correlation
+Impact analysis
+Escalation recommendations
+Customer audience identification
+Customer acknowledgement
+Operational history
+Recovery evaluation
+```
+
+Actions that directly modify network infrastructure should remain under authorized engineer control.
+
+---
+
+## Verified Recovery
+
+An incident should not be considered resolved simply because the alarm disappeared.
+
+NetSage requires healthy telemetry to remain stable for a defined period before declaring recovery.
+
+---
+
+# Current Prototype Capabilities
+
+The current NetSage version includes:
+
+```text
+Multi-site monitoring
+
+Telemetry storage
+
+Latency monitoring
+
+Packet loss monitoring
+
+Reachability monitoring
+
+Predictive network risk
+
+Explainable risk scoring
+
+Sustained degradation detection
+
+Alert generation
+
+Multi-site incident correlation
+
+Shared dependency reasoning
+
+Incident severity
+
+Incident timeline
+
+Engineer assignment
+
+Incident notes
+
+Customer records
+
+Customer impact calculation
+
+Site-level customer impact
+
+Maintenance escalation
+
+Automated escalation recommendations
+
+Proactive customer SMS
+
+Outage notifications
+
+Progress notifications
+
+Recovery notifications
+
+SMS approval workflow
+
+SMS delivery tracking
+
+Africa's Talking Sandbox integration
+
+Sandbox shortcode support
+
+Incoming customer SMS
+
+Customer identification
+
+Site identification
+
+Customer-to-incident matching
+
+Automatic customer acknowledgement
+
+Customer reports dashboard
+
+Customer incident progress updates
+
+Recovery verification
+
+Operational history
+```
+
+---
+
+# Production Roadmap
+
+A production deployment can extend NetSage with:
+
+```text
+Real ISP telemetry integrations
+
+SNMP
+
+Router APIs
+
+Switch APIs
+
+OLT/ONT integrations
+
+Network Management System integrations
+
+Streaming telemetry
+
+Historical telemetry datasets
+
+Machine learning anomaly detection
+
+Advanced predictive maintenance
+
+GIS mapping
+
+Network topology discovery
+
+Maintenance ticket integrations
+
+WhatsApp communication
+
+Voice communication
+
+Email communication
+
+Advanced SLA reporting
+
+Customer portal
+
+Mobile operations application
+
+Multi-tenant ISP support
+
+PostgreSQL
+
+Redis
+
+Background task processing
+
+Cloud deployment
+
+High availability
+
+Observability
+
+Audit logging
+
+Role-based enterprise access
+```
 
 ---
 
@@ -936,52 +1837,153 @@ A production ISP deployment can add:
 
 NetSage is designed as a **B2B SaaS platform for Internet Service Providers**.
 
-Potential commercial models include:
+Potential pricing models include:
 
-- Subscription per monitored site
-- Subscription per monitored device
-- ISP-wide enterprise plans
-- Integration and onboarding fees
-- Premium predictive analytics
-- Advanced reporting
-- Premium support
-- Messaging usage charges
+```text
+Subscription per monitored site
+
+Subscription per monitored device
+
+ISP-wide enterprise subscription
+
+Integration and onboarding fees
+
+Premium predictive analytics
+
+Advanced operational reporting
+
+Premium support
+
+Communication usage charges
+```
 
 ---
 
-# Why NetSage?
+# Why NetSage Is Different
 
-Traditional monitoring tools can show that several devices have alarms.
-
-NetSage focuses on turning those signals into an operational response.
-
-Instead of only asking:
+Many monitoring systems answer:
 
 ```text
-Which device is failing?
+Which device is currently alarming?
 ```
 
-NetSage also helps answer:
+NetSage aims to answer:
 
 ```text
+Is this problem emerging before complete failure?
+
 Are these alerts related?
 
-What shared dependency may be responsible?
+What dependency connects them?
 
 Which locations are affected?
 
-How many customers may be impacted?
+How many customers may be affected?
 
 Which maintenance team should respond?
 
 Have customers already reported the problem?
 
-Should customers be notified?
+Should customers be notified proactively?
 
-Has service actually recovered?
+What are customers reporting back?
+
+Has the network actually recovered?
 ```
 
-That transforms monitoring information into coordinated action.
+NetSage therefore connects:
+
+```text
+Monitoring
++
+Prediction
++
+Incident intelligence
++
+Customer impact
++
+Maintenance response
++
+Customer communication
++
+Recovery verification
+```
+
+into one operational workflow.
+
+---
+
+# Hardware Strategy
+
+NetSage does not require ISPs to replace existing network hardware.
+
+The preferred approach is to integrate first with existing infrastructure such as:
+
+```text
+Routers
+Switches
+OLTs
+ONTs
+Network Management Systems
+```
+
+Where additional independent monitoring is needed, low-cost edge devices such as Raspberry Pi probes or IoT sensors can be deployed.
+
+Example:
+
+```text
+ISP Router / OLT
+        │
+        ├── SNMP
+        ├── API
+        ├── Syslog
+        │
+        ▼
+Edge Monitoring Probe
+        │
+        ├── Latency
+        ├── Packet loss
+        ├── Reachability
+        ├── Link health
+        └── Power/environment monitoring
+        │
+        ▼
+      NetSage
+```
+
+---
+
+# Security and Safety
+
+NetSage uses several safety principles in the prototype.
+
+These include:
+
+```text
+Staff-protected operational APIs
+
+Explicit SMS test-recipient allowlists
+
+Sandbox-only external SMS mode
+
+Dry-run SMS support
+
+Human approval for customer notifications
+
+No committed API keys
+
+Environment-based configuration
+
+Human-controlled infrastructure actions
+```
+
+Never commit:
+
+```text
+backend/.env
+```
+
+or real provider credentials.
 
 ---
 
@@ -989,47 +1991,85 @@ That transforms monitoring information into coordinated action.
 
 NetSage was developed collaboratively by:
 
-- **Grace Nakiyemba**
-- **Grace Bawuza**
-- **Phionah Najjuma**
-- **Brendalyne Musoki**
+**Grace Nakiyemba**  
+Backend, integration, predictive risk, Operations Interface, incident impact and system integration
 
-for the **Connecting The Future Hackathon 2026**.
+**Grace Bawuza**  
+Frontend and public product experience
+
+**Phionah Najjuma**  
+Simulator and network detection
+
+**Brendalyne Musoki**  
+Customer reports and SMS communication
+
+---
+
+# Hackathon
+
+**Connecting The Future Hackathon 2026**
+
+Location:
+
+```text
+Uganda Christian University
+Mukono, Uganda
+```
+
+Theme:
+
+```text
+Making telecom networks smarter,
+more reliable,
+and easier to operate.
+```
 
 ---
 
 # Vision
 
-Our goal is to help Internet Service Providers move from:
+NetSage aims to move Internet Service Providers from:
 
 ```text
+Customer notices outage
+        ↓
 Customer complains
         ↓
-Operator investigates
+Support receives complaint
         ↓
-Fault discovered
+Operations begins investigation
+        ↓
+Fault is eventually identified
 ```
 
 to:
 
 ```text
-Network risk detected
+Network risk emerges
         ↓
-Operator warned
+NetSage detects the trend
         ↓
-Incident understood
+Operations receives early warning
         ↓
-Customer impact identified
+Related network events are correlated
         ↓
-Maintenance coordinated
+Customer impact is identified
         ↓
-Customers informed
+Maintenance response is coordinated
         ↓
-Recovery verified
+Customers are informed proactively
+        ↓
+Customer feedback is linked to the incident
+        ↓
+Recovery is verified
+        ↓
+Customers are informed of restoration
 ```
 
 ---
 
-## NetSage
+# NetSage
 
-**Network clarity. Connected communities.**
+## Network clarity. Connected communities.
+
+NetSage turns network signals into coordinated operational action.
