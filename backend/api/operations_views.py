@@ -11,8 +11,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .models import Alert, Device, Incident, IncidentEvent, Site
+from .models import (
+    Alert,
+    CustomerNetworkReport,
+    Device,
+    Incident,
+    IncidentEvent,
+    Site,
+)
 from .services.recovery import evaluate_incident_recovery
+from .services.customer_incident_updates import (
+    notify_customers_of_incident_status,
+)
 from .operations_serializers import (
     AlertFilterSerializer,
     AlertSerializer,
@@ -24,6 +34,7 @@ from .operations_serializers import (
     IncidentSerializer,
     IncidentUpdateSerializer,
     SiteFilterSerializer,
+    CustomerReportSerializer,
 )
 from .views import StandardPagination
 
@@ -131,6 +142,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                     actor=request.user,
                 )
 
+                notify_customers_of_incident_status(incident)
+
             incident = self.get_queryset().get(pk=incident.pk)
 
             return Response(
@@ -227,6 +240,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                 ]
             )
 
+            notify_customers_of_incident_status(incident)
+
             site_names = ", ".join(
                 result["site_name"]
                 for result in recovery["sites"]
@@ -322,6 +337,8 @@ class IncidentViewSet(StaffReadOnlyViewSet):
                     "updated_at",
                 ]
             )
+
+            notify_customers_of_incident_status(incident)
 
             cleared_count = incident.alerts.filter(
                 cleared_at__isnull=True,
@@ -430,3 +447,15 @@ class DashboardSummaryView(APIView):
                 severity="critical",
             ).count(),
         })
+
+class CustomerReportViewSet(StaffReadOnlyViewSet):
+    queryset = (
+        CustomerNetworkReport.objects
+        .select_related(
+            "customer",
+            "site",
+            "incident",
+        )
+        .order_by("-created_at", "-id")
+    )
+    serializer_class = CustomerReportSerializer

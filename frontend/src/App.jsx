@@ -19,6 +19,7 @@ import {
   Globe2,
   LogOut,
   Moon,
+  MessageSquare,
   Network,
   RefreshCw,
   Router,
@@ -1388,6 +1389,9 @@ function Dashboard({
 }) {
   const [sites, setSites] = useState([])
   const [selectedSite, setSelectedSite] = useState('')
+  const [customerReports, setCustomerReports] = useState([])
+  const [customerReportsLoading, setCustomerReportsLoading] = useState(true)
+  const [customerReportsError, setCustomerReportsError] = useState('')
   const [summary, setSummary] = useState(null)
   const [devices, setDevices] = useState([])
   const [telemetry, setTelemetry] = useState([])
@@ -1402,6 +1406,20 @@ function Dashboard({
   async function loadSites() {
     const data = await getJson('/api/sites/')
     setSites(resultsOf(data))
+  }
+
+  async function loadCustomerReports() {
+    setCustomerReportsLoading(true)
+    setCustomerReportsError('')
+
+    try {
+      const data = await getJson('/api/customer-reports/')
+      setCustomerReports(resultsOf(data))
+    } catch (err) {
+      setCustomerReportsError(err.message)
+    } finally {
+      setCustomerReportsLoading(false)
+    }
   }
 
   async function loadEngineers() {
@@ -1458,6 +1476,7 @@ function Dashboard({
     Promise.all([
       loadSites(),
       loadEngineers(),
+      loadCustomerReports(),
     ]).catch((err) => setError(err.message))
   }, [])
 
@@ -2086,6 +2105,81 @@ function Dashboard({
                   ) : (
                     <div className="p-10 text-center text-sm text-slate-400">
                       No active alerts in this view.
+                    </div>
+                  )}
+                </div>
+              </article>
+            </section>
+
+            <section className="mt-6">
+              <article className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="text-blue-500" size={19} />
+                    <h2 className="font-bold">Customer Reports</h2>
+                  </div>
+
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Reports submitted by customers about network issues
+                  </p>
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {customerReportsLoading ? (
+                    <div className="p-10 text-center text-sm text-slate-400">
+                      Loading customer reports...
+                    </div>
+                  ) : customerReportsError ? (
+                    <div className="p-10 text-center text-sm text-red-500">
+                      {customerReportsError}
+                    </div>
+                  ) : customerReports.length ? (
+                    customerReports.map((report) => (
+                      <div key={report.id} className="p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <h3 className="font-semibold">
+                              {report.site_name || 'Unknown site'}
+                            </h3>
+
+                            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                              {report.message || 'No message provided.'}
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                {report.report_status}
+                              </span>
+
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                {report.acknowledgement_status === 'acknowledged'
+                                  ? 'Acknowledged'
+                                  : 'Not acknowledged'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="text-xs text-slate-400">
+                            {formatDate(report.received_at)}
+                          </span>
+
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                            <span>
+                              Sender: {report.masked_sender || 'Unknown'}
+                            </span>
+
+                            {report.incident_status && (
+                              <span>
+                                Incident: {report.incident_status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center text-sm text-slate-400">
+                      No customer reports in this view.
                     </div>
                   )}
                 </div>

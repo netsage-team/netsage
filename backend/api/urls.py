@@ -13,6 +13,7 @@ from .notification_views import (
 )
 from .operations_views import (
     AlertViewSet,
+    CustomerReportViewSet,
     DashboardSummaryView,
     EngineerViewSet,
     IncidentViewSet,
@@ -45,7 +46,6 @@ router.register(
     TelemetryReadingViewSet,
     basename="telemetry",
 )
-
 router.register(
     "alerts",
     AlertViewSet,
@@ -62,6 +62,12 @@ router.register(
     "engineers",
     EngineerViewSet,
     basename="engineer",
+)
+
+router.register(
+    "customer-reports",
+    CustomerReportViewSet,
+    basename="customer-report",
 )
 
 
