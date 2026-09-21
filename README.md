@@ -1,880 +1,1035 @@
+# NetSage
 
+**Network clarity. Connected communities.**
 
+NetSage is an intelligent network monitoring and incident response platform designed for Internet Service Providers (ISPs).
 
-NetSage
-Network clarity. Connected communities.
+It helps network operations teams move from reactive troubleshooting to proactive incident management by monitoring network telemetry, identifying emerging risk, detecting sustained degradation, correlating related site alerts, estimating customer impact, coordinating maintenance response, communicating with customers, and verifying recovery.
 
-NetSage is a network monitoring and incident response platform for Internet Service Providers (ISPs) and network operations teams. It helps operators monitor distributed network infrastructure, detect sustained degradation, correlate related alerts across towers and sites, coordinate incident response, and communicate with customers through Africa's Talking SMS.
+NetSage was developed for the **Connecting The Future Hackathon 2026** at Uganda Christian University, Mukono.
 
-Built for the Connecting The Future Hackathon 2026.
+---
 
-Table of Contents
-Overview
+## The Problem
 
-Key Capabilities
+Internet Service Providers manage networks made up of many towers, routers, access points, POPs, and shared upstream connections.
 
-Architecture
+When a network problem occurs, operations teams may receive several separate alerts from different locations even when those alerts are caused by one shared infrastructure problem.
 
-Technology Stack
+This creates several challenges:
 
-Repository Structure
+- Network teams may react only after customers complain.
+- Multiple alerts can hide a single underlying incident.
+- Operators may struggle to identify which areas are affected.
+- It may be difficult to estimate how many customers are impacted.
+- Maintenance escalation can be slow or inconsistent.
+- Customers may not receive timely service updates.
+- Recovery may be assumed before network stability is actually confirmed.
 
-Developer Setup
+NetSage brings these activities into one operational workflow.
 
-Prerequisites
+---
 
-Clone the Repository
+## Our Solution
 
-Create the Python Environment
+NetSage provides an end-to-end network incident workflow:
 
-Install Backend Dependencies
-
-Configure Environment Variables
-
-Install Frontend Dependencies
-
-Run Database Migrations
-
-Seed Demo Data
-
-Start the Backend
-
-Start the Frontend
-
-Environment Variables
-
-Demo Scenario
-
-Testing and Quality Checks
-
-Africa's Talking SMS Integration
-
-Development Workflow
-
-Troubleshooting
-
-Hackathon Demo Flow
-
-Project Status
-
-Team
-
-Security Notes
-
-License
-
-Overview
-Network outages rarely appear as one clear alert.
-
-An ISP may receive alarms from several towers at the same time. Without enough context, an operations team may struggle to determine whether those alarms represent:
-
-independent tower failures
-
-temporary network fluctuations
-
-a single shared upstream fault
-
-an incident already affecting customers
-
-a network event that has actually recovered
-
-NetSage brings these signals into one operational workflow.
-
+```text
 Network telemetry
-      ↓
+        ↓
+Predictive risk analysis
+        ↓
 Sustained degradation detection
-      ↓
-Alerts
-      ↓
-Cross-site correlation
-      ↓
-Shared dependency analysis
-      ↓
-Operational incident
-      ↓
-Engineer investigation
-      ↓
+        ↓
+Alert generation
+        ↓
+Multi-site incident correlation
+        ↓
+Shared dependency reasoning
+        ↓
+Customer impact analysis
+        ↓
+Maintenance escalation
+        ↓
 Customer communication
-      ↓
+        ↓
+Customer reports
+        ↓
 Recovery verification
-      ↓
+        ↓
 Incident resolution
-A key design principle is:
+```
+
+Instead of treating every degraded network site as an unrelated problem, NetSage identifies relationships between affected sites and helps operators understand the larger operational picture.
+
+---
+
+## Core Features
+
+### 1. Real-Time Network Monitoring
+
+NetSage monitors network telemetry including:
+
+- Latency
+- Packet loss
+- Reachability
+- Site status
+- Device status
+- Telemetry history
+
+The operations dashboard provides visibility across multiple network locations.
+
+---
+
+### 2. Predictive Network Risk
+
+NetSage analyses recent telemetry trends to identify potential problems before complete service failure.
+
+The current prototype considers:
+
+- Current latency
+- Current packet loss
+- Reachability
+- Rising latency trends
+- Rising packet loss trends
+- Consecutive worsening readings
+
+A site receives an explainable risk score and risk level:
+
+```text
+Low
+Medium
+High
+Critical
+```
+
+For example:
+
+```text
+Mukono Central
+
+Risk score: 62/100
+Risk level: High
+Site reachable: Yes
+Predicted failure: True
+```
+
+This allows network teams to begin preventive investigation while connectivity still exists.
+
+The hackathon prototype uses an **explainable telemetry trend-based risk engine** rather than a trained black-box machine learning model.
+
+In production, the prediction engine can be calibrated using historical ISP telemetry and extended with machine learning models for anomaly detection and failure probability.
+
+---
+
+### 3. Sustained Degradation Detection
+
+NetSage identifies network problems based on sustained abnormal telemetry rather than reacting to a single temporary spike.
+
+The demo thresholds are illustrative:
+
+```text
+Latency threshold: 150 ms
+Packet loss threshold: 5%
+Sustained degradation duration: 90 seconds
+Telemetry interval: 30 seconds
+```
+
+These values would be configured together with network engineers in a production deployment.
+
+---
+
+### 4. Incident Correlation
 
 One network problem should not look like three unrelated alarms.
 
-Key Capabilities
-Network Monitoring
-NetSage monitors infrastructure conditions such as:
+In the NetSage demo topology:
 
-latency
+```text
+Mukono Central ─┐
+Seeta           ├── Mukono Shared Uplink
+UCU Area        ┘
+```
 
-packet loss
+If all three sites experience related degradation, NetSage can correlate their alerts into one incident and identify the shared upstream dependency as a probable cause indicator.
 
-availability
+This helps reduce alert noise and gives engineers a clearer incident context.
 
-device health
+---
 
-site and tower health
+### 5. Multi-Site Visibility
 
-Detection logic focuses on sustained degradation rather than treating every short spike as an outage.
+The operations dashboard shows:
 
-Multi-Tower Incident Correlation
-NetSage can correlate alerts across several sites and identify when they may share the same dependency.
+- Healthy sites
+- Degraded sites
+- Active alerts
+- Active incidents
+- Shared network dependencies
+- Affected locations
+- Telemetry trends
+- Incident severity
+- Assigned engineer
+- Incident lifecycle
+
+---
+
+### 6. Customer Impact Analysis
+
+NetSage connects network incidents with customer records associated with affected sites.
+
+For each incident, the platform can calculate:
+
+- Number of affected sites
+- Number of affected areas
+- Customers potentially affected
+- Customers eligible for SMS
+- Customer reports received
+- Reporting customers
+- Site-by-site customer impact
 
 Example:
 
-Mukono Central ─┐
-                │
-Seeta ──────────┼── Mukono Shared Uplink
-                │
-UCU Area ───────┘
-Instead of presenting three unrelated incidents, NetSage can group the affected sites into one shared operational event when the evidence supports it.
+```text
+Affected sites: 3
+Potentially affected customers: 6
+SMS eligible customers: 1
+Customer reports received: 2
+```
 
-Infrastructure Topology
-The operations interface provides visibility into:
+This allows operations teams to understand both the technical and customer impact of an incident.
 
-towers and sites
+---
 
-shared infrastructure
+### 7. Maintenance Escalation
 
-active degradation
+NetSage includes an explainable operational escalation engine.
 
-alert counts
+The recommendation considers:
 
-affected sites
+- Incident severity
+- Number of affected sites
+- Number of potentially affected customers
+- Customer reports
 
-shared dependency context
+Escalation levels include:
 
-probable cause information
+```text
+Level 1
+Network Operations Centre
 
-NetSage presents correlated evidence while allowing engineers to verify the actual root cause.
+Level 2
+Regional Network Operations and Maintenance
 
-Incident Operations
-Operations staff can:
+Level 3
+Senior Network Operations and Field Maintenance
+```
 
-inspect incidents
+NetSage can automatically apply operational escalation while infrastructure-changing actions remain under human control.
 
-view affected towers
+The platform also records escalation events in the incident timeline.
 
-assign an engineer
+---
 
-add investigation notes
+### 8. Engineer Assignment and Incident Workflow
 
-follow incident status
+Operators can:
 
-review incident history
+- Assign an engineer
+- Start investigation
+- Add incident notes
+- Review probable causes
+- Review affected sites
+- Review customer impact
+- Monitor maintenance escalation
+- Verify recovery
+- Resolve incidents
 
-verify recovery
+Typical incident lifecycle:
 
-resolve incidents
+```text
+Open
+  ↓
+Investigating
+  ↓
+Monitoring Recovery
+  ↓
+Resolved
+```
 
-Customer SMS Notifications
-NetSage integrates with Africa's Talking and supports:
+---
 
-outage notifications
+## Customer Communication
 
-dry-run mode
+NetSage integrates with **Africa's Talking SMS**.
 
-sandbox safety
+The platform supports both directions of communication.
 
-recipient allowlisting
+### NetSage → Customer
 
-provider message IDs
+NetSage can proactively notify customers before they contact the provider.
 
-delivery callbacks
+Supported communication types include:
 
-delivery status tracking
+```text
+Outage notification
+Service update
+Recovery notification
+```
 
-Customer Network Issue Reporting
-Customers can report network problems through SMS.
+Example proactive message:
 
-Incoming reports are stored as CustomerNetworkReport records and can be connected to customer, site, and incident context as the two-way reporting workflow is completed.
+```text
+NetSage Alert: We detected a network issue affecting your area.
+Our technical team is already investigating.
+We will keep you updated.
+```
 
-A customer complaint is treated as operational evidence. It should not automatically create a confirmed network outage.
+This allows the provider to communicate before customers begin calling support.
 
-Architecture
-┌─────────────────────────────────┐
-│          React Frontend         │
-│  Public experience + Operations │
-└────────────────┬────────────────┘
-                 │ HTTP / JSON
-                 ▼
-┌─────────────────────────────────┐
-│       Django REST Backend       │
-│                                 │
-│ Sites       Devices             │
-│ Telemetry   Alerts              │
-│ Incidents   Customers           │
-│ Notifications                   │
-│ Customer Network Reports        │
-└────────────────┬────────────────┘
-                 │
-        ┌────────┴─────────┐
-        ▼                  ▼
-┌────────────────┐   ┌──────────────────┐
-│ Net Simulator  │   │ Africa's Talking │
-│                │   │                  │
-│ Telemetry      │   │ Outbound SMS     │
-│ Detection      │   │ Incoming SMS     │
-│ Correlation    │   │ Delivery reports │
-│ Recovery       │   └──────────────────┘
-└────────────────┘
-Technology Stack
-Backend
-Python
+---
 
-Django 6
+### Customer → NetSage
 
-Django REST Framework
+Customers can also report network problems through SMS.
 
-python-dotenv
+Example:
 
-dj-database-url
+```text
+Customer:
+Internet still slow in Mukono
+```
 
-psycopg
+NetSage can:
 
-Africa's Talking Python SDK
+1. Receive the incoming SMS.
+2. Identify the customer from the phone number.
+3. Identify the customer's network site.
+4. Match the report to an existing active incident.
+5. Store the report.
+6. Automatically acknowledge the customer.
 
-Requests
+Example acknowledgement:
 
-SQLite for local development data in the repository
+```text
+NetSage: We received your network report.
+Our team is checking the issue.
+Thank you for letting us know.
+```
 
-PostgreSQL support through DATABASE_URL
+This creates a two-way communication loop:
 
-Frontend
-React 19
+```text
+NetSage → Customer
+Customer → NetSage
+```
 
-React DOM
+---
 
-React Router
+## Africa's Talking Integration
 
-Vite 8
+The hackathon prototype uses the **Africa's Talking Sandbox**.
 
-Tailwind CSS 4
+The tested demo flow is:
 
-Recharts
+```text
+NetSage
+   ↓
+Africa's Talking SMS API
+   ↓
+Sandbox Shortcode
+   ↓
+Customer Simulator
+```
 
-Lucide React
+Incoming communication follows:
 
-Oxlint
+```text
+Customer Simulator
+   ↓
+Sandbox Shortcode
+   ↓
+Africa's Talking
+   ↓
+Public webhook
+   ↓
+NetSage
+```
 
-Network Simulation
-Python-based deterministic telemetry generation
+For local development, a tool such as **ngrok** can expose the Django webhook endpoints.
 
-sustained degradation detection
+### Incoming SMS Callback
 
-alert grouping
+```text
+/api/sms/incoming/
+```
 
-shared dependency modelling
+### Delivery Report Callback
 
-recovery verification
+```text
+/api/sms/delivery-report/
+```
 
-Development
-Git
+The exact public domain changes depending on the development tunnel being used.
 
-GitHub
+---
 
-Python virtual environments
+## Recovery Verification
 
-npm
+NetSage does not consider an incident recovered simply because an engineer believes the problem has been fixed.
 
-Node.js
+The platform verifies sustained healthy telemetry across all affected sites.
 
-Repository Structure
+Current demo recovery conditions include:
+
+```text
+Latency <= 150 ms
+Packet loss <= 5%
+Healthy duration >= 180 seconds
+Telemetry interval = 30 seconds
+```
+
+All affected sites must satisfy the recovery condition.
+
+Example:
+
+```text
+Mukono Central → Recovered
+Seeta → Recovered
+UCU Area → Recovered
+```
+
+After recovery is verified, the incident can move into monitoring and customers can receive a service restoration message.
+
+Example:
+
+```text
+Service Restored: Connectivity in your area has recovered.
+Thank you for your patience.
+```
+
+---
+
+## Demo Network
+
+The main NetSage demonstration uses three sites:
+
+```text
+Mukono Central
+Seeta
+UCU Area
+```
+
+Shared dependency:
+
+```text
+Mukono Shared Uplink
+```
+
+The demo illustrates how one shared infrastructure problem can affect several network locations at the same time.
+
+---
+
+## Demo Story
+
+A typical NetSage live demo follows this sequence:
+
+```text
+1. Network is monitored.
+
+2. Telemetry begins worsening.
+
+3. NetSage raises a predictive warning while the site is still reachable.
+
+4. Sustained degradation occurs.
+
+5. Multiple site alerts are generated.
+
+6. NetSage correlates the alerts into one incident.
+
+7. The shared dependency is identified.
+
+8. Customer impact is calculated.
+
+9. Maintenance escalation is recommended or applied.
+
+10. NetSage proactively sends affected customers an SMS.
+
+11. Customers can reply through SMS.
+
+12. Their reports are linked to the existing incident.
+
+13. Engineers investigate the incident.
+
+14. Healthy telemetry returns.
+
+15. NetSage verifies sustained recovery.
+
+16. Customers receive a recovery notification.
+
+17. The incident is resolved.
+```
+
+---
+
+## Technology Stack
+
+### Frontend
+
+- React
+- Vite
+- Tailwind CSS
+- React Router
+- Lucide React
+- Recharts
+
+### Backend
+
+- Python
+- Django
+- Django REST Framework
+
+### Database
+
+- SQLite for the hackathon prototype
+- Production deployments can use PostgreSQL
+
+### Messaging
+
+- Africa's Talking SMS API
+
+### Development and Deployment Tools
+
+- Git
+- GitHub
+- Docker-ready architecture
+- ngrok for local webhook exposure
+
+---
+
+## Architecture
+
+```text
+                 NETWORK INFRASTRUCTURE
+                         │
+       ┌─────────────────┼─────────────────┐
+       │                 │                 │
+    Routers           Switches          OLTs/ONTs
+       │                 │                 │
+       └─────────────────┼─────────────────┘
+                         │
+               Telemetry / NMS / SNMP
+                         │
+                         ▼
+                    NETSAGE API
+                         │
+            ┌────────────┼────────────┐
+            │            │            │
+            ▼            ▼            ▼
+       Prediction    Detection    Correlation
+            │            │            │
+            └────────────┼────────────┘
+                         │
+                         ▼
+                   INCIDENT ENGINE
+                         │
+           ┌─────────────┼─────────────┐
+           │             │             │
+           ▼             ▼             ▼
+      Customer       Maintenance    Engineer
+       Impact        Escalation     Workflow
+           │             │             │
+           └─────────────┼─────────────┘
+                         │
+                         ▼
+                AFRICA'S TALKING
+                         │
+                  SMS Communication
+                         │
+               ┌─────────┴─────────┐
+               ▼                   ▼
+          ISP → Customer      Customer → ISP
+```
+
+---
+
+## Hardware and Production Integration
+
+NetSage is primarily a software platform.
+
+A production implementation can integrate with existing ISP infrastructure such as:
+
+- Routers
+- Switches
+- OLTs
+- ONTs
+- Wireless access equipment
+- Network Management Systems
+- SNMP-enabled infrastructure
+- Syslog sources
+- Vendor APIs
+
+Where additional visibility is required, low-cost edge monitoring devices can also be deployed.
+
+Examples include:
+
+- Raspberry Pi monitoring probes
+- IoT sensors
+- Power monitoring devices
+- Environmental sensors
+
+These devices could monitor:
+
+- Latency
+- Packet loss
+- Reachability
+- Link availability
+- Power availability
+- Temperature
+- Equipment conditions
+
+For this hackathon prototype, **network telemetry is simulated**.
+
+The NetSage detection, prediction, correlation, database, incident workflow, customer impact analysis, SMS integration, incoming customer reports, maintenance escalation, and recovery verification are implemented application features.
+
+---
+
+## Project Structure
+
+```text
 netsage/
-├── backend/
-│   ├── api/                  # Django application and API
-│   ├── config/               # Django project configuration
-│   ├── .env.example          # Environment variable template
-│   ├── db.sqlite3            # Local development database
-│   ├── manage.py
-│   └── requirements.txt
 │
-├── docs/
-│   ├── development.md
-│   └── team.md
+├── backend/
+│   ├── api/
+│   │   ├── management/
+│   │   ├── migrations/
+│   │   ├── services/
+│   │   ├── models.py
+│   │   ├── urls.py
+│   │   ├── predictive_views.py
+│   │   ├── impact_views.py
+│   │   └── incoming_views.py
+│   │
+│   ├── config/
+│   └── manage.py
 │
 ├── frontend/
-│   ├── public/
 │   ├── src/
-│   ├── index.html
-│   ├── package.json
-│   ├── package-lock.json
-│   └── vite.config.js
-│
-├── scripts/
-│   └── setup-local.sh
+│   │   ├── components/
+│   │   │   └── operations/
+│   │   │       ├── PredictiveRiskPanel.jsx
+│   │   │       └── IncidentImpactPanel.jsx
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   └── api.js
+│   │
+│   └── package.json
 │
 ├── simulator/
-│   ├── tests/
-│   ├── cli.py
-│   ├── detection.py
-│   ├── generator.py
-│   ├── models.py
-│   ├── topology.py
-│   └── README.md
 │
-├── .gitignore
+├── docs/
+│
 └── README.md
-Developer Setup
-The steps below take a new developer from a fresh clone to a working local NetSage environment.
+```
 
-1. Prerequisites
-Install:
+---
 
-Git
+# Local Development
 
-Python 3.12 or newer
+## 1. Clone the Repository
 
-pip
-
-Python venv
-
-Node.js
-
-npm
-
-The team development environment has used Node.js 22 successfully.
-
-Verify your tools:
-
-git --version
-python3 --version
-pip3 --version
-node --version
-npm --version
-2. Clone the Repository
-Clone the project:
-
+```bash
 git clone https://github.com/netsage-team/netsage.git
 cd netsage
-For active development, use the shared development branch:
+```
 
-git checkout dev
-git pull origin dev
-3. Create the Python Environment
-From the repository root:
+---
 
+## 2. Create the Python Virtual Environment
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-Your prompt should now show the virtual environment:
+```
 
-(.venv) user@computer:~/Projects/netsage$
-Upgrade pip:
+---
 
-python -m pip install --upgrade pip
-To leave the environment later:
+## 3. Install Backend Dependencies
 
-deactivate
-4. Install Backend Dependencies
-The backend dependency manifest is:
+Install the Python dependencies configured for the project.
 
-backend/requirements.txt
-Install all backend dependencies with:
+Then apply migrations:
 
-pip install -r backend/requirements.txt
-The requirements file currently includes the application's Django, REST API, database, environment, HTTP, testing, and Africa's Talking dependencies.
-
-Do not install packages one by one unless you are intentionally changing the project dependency manifest.
-
-5. Configure Environment Variables
-Create your local backend environment file from the committed example:
-
-cp backend/.env.example backend/.env
-If backend/.env already exists, do not overwrite it unless you intend to replace your local configuration.
-
-Open:
-
-backend/.env
-and configure the required values.
-
-The committed template is:
-
-DJANGO_SECRET_KEY=
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=
-AFRICASTALKING_USERNAME=sandbox
-AFRICASTALKING_API_KEY=
-
-NETSAGE_SMS_MODE=dry_run
-AFRICASTALKING_TEST_RECIPIENTS=
-For safe local development, keep:
-
-NETSAGE_SMS_MODE=dry_run
-until you intentionally want to test SMS sending.
-
-Never commit your real backend/.env.
-
-6. Install Frontend Dependencies
-Because the repository contains both frontend/package.json and frontend/package-lock.json, the recommended clean install is:
-
-npm --prefix frontend ci
-If you intentionally update frontend dependencies, use:
-
-npm --prefix frontend install
-and review any changes to package-lock.json before committing.
-
-7. Run Database Migrations
-With the virtual environment active:
-
+```bash
 python backend/manage.py migrate
-Then verify the Django configuration:
+```
 
-python backend/manage.py check
-Check that the models do not require uncommitted migrations:
+---
 
-python backend/manage.py makemigrations --check
-A healthy result should include:
+## 4. Seed Demo Data
 
-No changes detected
-System check identified no issues
-8. Seed Demo Data
-NetSage includes a management command for base demo records:
-
+```bash
 python backend/manage.py seed_demo
-The seed command is designed to prepare predictable demo records while preserving existing records where appropriate.
+```
 
-9. Start the Backend
-From the repository root:
+---
 
-source .venv/bin/activate
+## 5. Start Django
+
+```bash
 python backend/manage.py runserver
-The Django development server normally starts at:
+```
 
+Backend:
+
+```text
 http://127.0.0.1:8000
-Leave this terminal running.
+```
 
-10. Start the Frontend
-Open a second terminal and run:
+---
 
-cd /path/to/netsage
+## 6. Install Frontend Dependencies
+
+```bash
+npm --prefix frontend install
+```
+
+---
+
+## 7. Start the Frontend
+
+```bash
 npm --prefix frontend run dev
-Vite will print the local frontend address, commonly:
+```
 
-http://localhost:5173
-Open the URL printed by Vite in your browser.
+Frontend:
 
-Quick Start Summary
-For a new developer, the complete setup is:
+```text
+http://127.0.0.1:5173
+```
 
-git clone https://github.com/netsage-team/netsage.git
-cd netsage
+Operations dashboard:
 
-git checkout dev
-git pull origin dev
+```text
+http://127.0.0.1:5173/operations
+```
 
-python3 -m venv .venv
-source .venv/bin/activate
+---
 
-python -m pip install --upgrade pip
-pip install -r backend/requirements.txt
+## 8. Start ngrok for SMS Webhooks
 
-cp backend/.env.example backend/.env
+```bash
+ngrok http 8000
+```
 
-npm --prefix frontend ci
+Configure the resulting public domain in the Africa's Talking Sandbox.
 
-python backend/manage.py migrate
-python backend/manage.py check
-python backend/manage.py makemigrations --check
-python backend/manage.py seed_demo
-Then start the backend:
-
-python backend/manage.py runserver
-and in another terminal start the frontend:
-
-npm --prefix frontend run dev
-Environment Variables
-Variable	Purpose	Local Development Guidance
-DJANGO_SECRET_KEY	Django cryptographic secret	Set a local development value; use a strong secret in deployed environments
-DJANGO_DEBUG	Enables Django debug mode	True locally, False in production
-DJANGO_ALLOWED_HOSTS	Allowed Django hostnames	localhost,127.0.0.1 locally
-DATABASE_URL	Database connection URL	Configure when using PostgreSQL or another external database
-AFRICASTALKING_USERNAME	Africa's Talking application username	Use sandbox for sandbox testing
-AFRICASTALKING_API_KEY	Africa's Talking API credential	Required for real sandbox/provider requests; never commit
-NETSAGE_SMS_MODE	Controls SMS behaviour	Keep dry_run for safe local development
-AFRICASTALKING_TEST_RECIPIENTS	Allowlisted test numbers	Add only approved test recipients
-Demo Scenario
-NetSage includes a deterministic Mukono network scenario.
-
-Demo Sites
-Mukono Central
-
-Seeta
-
-UCU Area
-
-Shared Dependency
-Mukono Shared Uplink
-The intended scenario is:
-
-Three towers degrade
-        ↓
-Three network alerts
-        ↓
-Cross-site correlation
-        ↓
-One shared incident
-        ↓
-Shared dependency identified
-        ↓
-Engineer investigation
-        ↓
-Customer communication
-        ↓
-Recovery verification
-The scenario is intentionally deterministic so it can be reproduced reliably during development and demonstration.
-
-Testing and Quality Checks
-Django Configuration
-python backend/manage.py check
-Pending Migration Check
-python backend/manage.py makemigrations --check
-Backend Test Suite
-python backend/manage.py test api
-Simulator Tests
-python -m unittest simulator.tests.test_detection -v
-Frontend Lint
-npm --prefix frontend run lint
-Frontend Production Build
-npm --prefix frontend run build
-Git Whitespace Check
-git diff --check
-Recommended Full Validation
-Before merging significant work into dev:
-
-python backend/manage.py makemigrations --check
-python backend/manage.py check
-python backend/manage.py test api
-python -m unittest simulator.tests.test_detection -v
-npm --prefix frontend run lint
-npm --prefix frontend run build
-git diff --check
-A Vite chunk-size warning does not by itself mean the build failed. Confirm that the build command exits successfully.
-
-Africa's Talking SMS Integration
-NetSage uses Africa's Talking for customer communication.
-
-Safe Local Mode
-The default template uses:
-
-NETSAGE_SMS_MODE=dry_run
-This should remain the default during ordinary local development.
-
-Sandbox Configuration
-For Africa's Talking sandbox testing:
-
-AFRICASTALKING_USERNAME=sandbox
-AFRICASTALKING_API_KEY=your_sandbox_api_key
-AFRICASTALKING_TEST_RECIPIENTS=+2567XXXXXXXX
-Use only approved test numbers.
-
-Outbound SMS
-The current SMS workflow supports:
-
-controlled outage notifications
-
-provider message IDs
-
-delivery tracking
-
-dry-run mode
-
-sandbox test-recipient restrictions
-
-Delivery Reports
-NetSage accepts Africa's Talking delivery callbacks so notification delivery state can be updated.
-
-The development callback route is:
-
-/api/sms/delivery-report/
-Typical notification states include:
-
-Pending
-Sent
-Delivered
-Failed
-Incoming Customer SMS
-NetSage also provides an incoming SMS webhook used to store customer network reports.
-
-The current incoming route is:
-
-/api/sms/incoming/
-The incoming message is stored before additional customer/site/incident matching logic is performed.
-
-Local Webhook Testing
-Africa's Talking needs a publicly reachable URL for callbacks. During local development, a tunnelling service such as ngrok can expose the Django server.
-
-Example pattern:
-
-https://your-temporary-domain.example/api/sms/delivery-report/
-Temporary tunnel domains should never be hardcoded into committed source files.
-
-Development Workflow
-NetSage uses this branch flow:
-
-feature branch
-      ↓
-     dev
-      ↓
-integration testing
-      ↓
-     main
-Start New Work
-Always start from the latest dev:
-
-git checkout dev
-git pull origin dev
-git checkout -b feature/your-feature-name
 Example:
 
-git checkout -b feature/customer-report-matching
-Commit Changes
-git status
-git add .
-git commit -m "Add customer report matching"
-Use a clear commit message describing the change.
+```text
+Incoming SMS:
+https://YOUR-NGROK-DOMAIN/api/sms/incoming/
 
-Push the Branch
-git push -u origin feature/your-feature-name
-Open a Pull Request
-Active feature pull requests should target:
+Delivery report:
+https://YOUR-NGROK-DOMAIN/api/sms/delivery-report/
+```
 
-dev
-The final release is:
+Never commit temporary ngrok URLs as production configuration.
 
-dev → main
-only after integration testing and demo validation are complete.
+---
 
-After a Merge
-Update your local development branch:
+# Environment Variables
 
-git checkout dev
-git pull origin dev
-Then rerun the relevant checks.
+Create:
 
-Troubleshooting
-npm ci Fails
-The repository currently includes frontend/package-lock.json, so npm ci should work.
+```text
+backend/.env
+```
 
-If the lock file and package.json have become inconsistent, do not delete the lock file casually. First inspect the dependency changes. If you are intentionally updating dependencies, run:
+Example configuration:
 
-npm --prefix frontend install
-and review the resulting package-lock.json.
+```env
+NETSAGE_SMS_MODE=sandbox
 
-Django Reports Conflicting Migrations
-Inspect the migration graph:
+AFRICASTALKING_USERNAME=sandbox
+AFRICASTALKING_API_KEY=YOUR_SANDBOX_API_KEY
 
-python backend/manage.py showmigrations api
-Do not randomly delete or rename shared migrations.
+AFRICASTALKING_TEST_RECIPIENTS=+256XXXXXXXXX
 
-When two legitimate branches created parallel migrations, resolve them with a proper Django merge migration.
+AFRICASTALKING_SENDER_ID=YOUR_SANDBOX_SHORTCODE
+```
 
-Django Port Is Already in Use
-Run on another port:
+Never commit `.env` files or API keys to Git.
 
-python backend/manage.py runserver 8001
-Frontend Port Is Already in Use
-Vite will usually offer another port. You can also stop the existing process and rerun:
+For development without external SMS:
 
-npm --prefix frontend run dev
-Frontend Cannot Reach the Backend
-Check:
+```env
+NETSAGE_SMS_MODE=dry_run
+```
 
-Django is running
+---
 
-the frontend API base URL is correct
+# Predictive Warning Demo
 
-Django allowed hosts
+To generate worsening but still reachable telemetry:
 
-CORS configuration
+```bash
+python backend/manage.py seed_predictive_warning
+```
 
-browser Network tab
+A demo result may look like:
 
-browser console
+```text
+Site: Mukono Central
+Risk score: 62/100
+Risk level: high
+Predicted failure: True
+```
 
-Django terminal logs
+This demonstrates that NetSage can raise a warning before complete network failure.
 
-SMS Is Not Sending
-Check:
+---
 
-AFRICASTALKING_USERNAME
+# Incident Demo
 
-AFRICASTALKING_API_KEY
+Run the existing demo scenario:
 
-NETSAGE_SMS_MODE
+```bash
+python backend/manage.py run_demo_scenario
+```
 
-AFRICASTALKING_TEST_RECIPIENTS
+This simulates network degradation and demonstrates alert detection and incident correlation.
 
-recipient phone-number format
+---
 
-Africa's Talking sandbox configuration
+# API Highlights
 
-provider response
+```text
+GET  /api/health/
 
-delivery callback logs
+GET  /api/dashboard/summary/
 
-Do not print or commit the API key while debugging.
+GET  /api/sites/
+GET  /api/devices/
+GET  /api/telemetry/
+GET  /api/alerts/
+GET  /api/incidents/
 
-Hackathon Demo Flow
-The intended complete NetSage demonstration is:
+GET  /api/predictive-risk/
 
-Public NetSage Website
+GET  /api/incidents/<id>/impact/
+POST /api/incidents/<id>/impact/
+
+POST /api/sms/incoming/
+POST /api/sms/delivery-report/
+
+POST /api/notification-draft/
+POST /api/notification-approve/
+POST /api/notification-send/
+GET  /api/notification-history/
+```
+
+Authenticated operational endpoints are restricted to staff users.
+
+---
+
+# Running Checks
+
+Backend:
+
+```bash
+python backend/manage.py check
+```
+
+Frontend production build:
+
+```bash
+npm --prefix frontend run build
+```
+
+Git whitespace check:
+
+```bash
+git diff --check
+```
+
+---
+
+# Product Principles
+
+NetSage is built around several principles:
+
+### Explainability
+
+Network engineers should understand why a warning or escalation was generated.
+
+### Human-Controlled Infrastructure Actions
+
+NetSage can automate monitoring, correlation, impact analysis, recommendations, escalation, and communication workflows.
+
+Infrastructure-changing remediation should remain controlled by authorized network engineers.
+
+### Customer Communication
+
+Customers should not always have to be the first people to report an outage.
+
+Providers should be able to communicate proactively while still allowing customers to report problems through accessible channels such as SMS.
+
+### Recovery Verification
+
+An incident should not be considered fixed until network telemetry supports that conclusion.
+
+---
+
+# Current Prototype vs Production Deployment
+
+## Implemented in the Prototype
+
+- Multi-site network monitoring
+- Simulated telemetry
+- Latency and packet loss tracking
+- Sustained degradation detection
+- Predictive telemetry risk analysis
+- Alert generation
+- Incident correlation
+- Shared dependency reasoning
+- Incident lifecycle management
+- Engineer assignment
+- Incident notes and timeline
+- Customer records
+- Customer impact analysis
+- Maintenance escalation
+- Proactive customer SMS
+- Incoming customer SMS reports
+- Customer-to-incident matching
+- Automatic SMS acknowledgements
+- Africa's Talking Sandbox integration
+- SMS delivery tracking
+- Recovery verification
+- Operational history
+
+## Production Extensions
+
+A production ISP deployment can add:
+
+- Real SNMP telemetry
+- Router integrations
+- Switch integrations
+- OLT/ONT integrations
+- NMS integrations
+- Vendor APIs
+- Streaming telemetry
+- Historical network datasets
+- Machine learning models
+- Advanced anomaly detection
+- Automated maintenance ticketing
+- GIS/network topology data
+- Additional communication channels
+- Advanced reporting and analytics
+- High availability deployment
+- PostgreSQL
+- Cloud infrastructure
+
+---
+
+# Business Model
+
+NetSage is designed as a **B2B SaaS platform for Internet Service Providers**.
+
+Potential commercial models include:
+
+- Subscription per monitored site
+- Subscription per monitored device
+- ISP-wide enterprise plans
+- Integration and onboarding fees
+- Premium predictive analytics
+- Advanced reporting
+- Premium support
+- Messaging usage charges
+
+---
+
+# Why NetSage?
+
+Traditional monitoring tools can show that several devices have alarms.
+
+NetSage focuses on turning those signals into an operational response.
+
+Instead of only asking:
+
+```text
+Which device is failing?
+```
+
+NetSage also helps answer:
+
+```text
+Are these alerts related?
+
+What shared dependency may be responsible?
+
+Which locations are affected?
+
+How many customers may be impacted?
+
+Which maintenance team should respond?
+
+Have customers already reported the problem?
+
+Should customers be notified?
+
+Has service actually recovered?
+```
+
+That transforms monitoring information into coordinated action.
+
+---
+
+# Team
+
+NetSage was developed collaboratively by:
+
+- **Grace Nakiyemba**
+- **Grace Bawuza**
+- **Phionah Najjuma**
+- **Brendalyne Musoki**
+
+for the **Connecting The Future Hackathon 2026**.
+
+---
+
+# Vision
+
+Our goal is to help Internet Service Providers move from:
+
+```text
+Customer complains
         ↓
-Operations Dashboard
+Operator investigates
         ↓
-Mukono Shared Uplink Scenario
+Fault discovered
+```
+
+to:
+
+```text
+Network risk detected
         ↓
-Three Towers Degrade
+Operator warned
         ↓
-Alerts Are Correlated
+Incident understood
         ↓
-One Shared Incident Appears
+Customer impact identified
         ↓
-Engineer Investigates
+Maintenance coordinated
         ↓
-Customer Outage SMS
+Customers informed
         ↓
-SMS Delivery Tracking
-        ↓
-Customer Reports Network Problem
-        ↓
-Report Matched To Operational Context
-        ↓
-Acknowledgement / Progress Communication
-        ↓
-Network Recovers
-        ↓
-Recovery Verified
-        ↓
-Customer Recovery Update
-        ↓
-Incident Resolved
-Features still under active development should not be presented as complete until they are merged into dev and validated.
+Recovery verified
+```
 
-Project Status
-NetSage is under active development for the Connecting The Future Hackathon 2026.
+---
 
-Integrated in dev
-network telemetry simulation
+## NetSage
 
-sustained degradation detection
-
-cross-site alert correlation
-
-deterministic Mukono scenario
-
-incident creation and operations workflow
-
-engineer assignment and incident timeline
-
-tower infrastructure monitoring
-
-network topology visualization
-
-outbound customer SMS notifications
-
-delivery tracking and callbacks
-
-incoming customer SMS webhook
-
-customer network report storage
-
-In Progress
-customer/site/incident report matching
-
-automatic SMS acknowledgement
-
-customer progress and recovery updates
-
-customer reports dashboard
-
-public NetSage website
-
-product/demo entry experience
-
-responsive design
-
-accessibility and final polish
-
-Team
-Grace Nakiyemba
-Core Backend, Operations Interface, Technical Lead and Integration
-
-
-operations dashboard
-
-incident visibility
-
-operational workflows
-
-backend architecture
-
-Django APIs
-
-incident operations
-
-system integration
-
-SMS integration
-
-final QA and release integration
-
-Phionah Najjuma
-Network Simulation and Detection
-
-telemetry simulation
-
-degradation detection
-
-network scenarios
-
-correlation support
-
-
-Brendalyne Musoki
-Customer Communication and SMS
-
-customer network reports
-
-incoming SMS
-
-customer communication workflows
-
-Grace Bawuza
-Public Website and Product Experience
-
-public website
-
-product storytelling
-
-visual system
-
-demo entry experience
-
-responsive design
-
-Security Notes
-Never commit backend/.env
-
-Never commit Africa's Talking API keys
-
-Keep secrets in environment variables
-
-Use NETSAGE_SMS_MODE=dry_run for ordinary local development
-
-Preserve sandbox recipient restrictions
-
-Mask customer phone numbers in staff interfaces where possible
-
-Do not expose private customer data through public endpoints
-
-Treat customer reports as evidence rather than automatic proof of an outage
-
-Use DJANGO_DEBUG=False in deployed production environments
-
-Use a strong DJANGO_SECRET_KEY outside local development
-
-License
-See the repository LICENSE file for licensing information
+**Network clarity. Connected communities.**
