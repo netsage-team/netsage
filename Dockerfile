@@ -15,6 +15,7 @@ FROM python:3.14-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     DJANGO_DEBUG=False
 
 WORKDIR /app
@@ -24,6 +25,7 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend/ ./backend/
+COPY simulator/ ./simulator/
 COPY scripts/start-production.sh ./scripts/start-production.sh
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
