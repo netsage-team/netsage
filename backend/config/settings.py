@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"
+
 load_dotenv(BASE_DIR / '.env')
 
 
@@ -34,6 +36,17 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost
 
 # Application definition
 
+
+# Trust HTTPS information from the deployment reverse proxy.
+# Secure cookies are enabled only outside local development.
+# Render forwards the original request protocol to Django.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Require HTTPS and secure cookies outside local development.
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,6 +58,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serve collected static assets directly from the Django application.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,7 +73,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [FRONTEND_DIST],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,12 +134,36 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Serve Vite assets at their original /assets/ and /images/ URLs.
+# Django's collected static files remain available under /static/.
+WHITENOISE_ROOT = FRONTEND_DIST
+
+# Use hashed, compressed assets in production while keeping local development simple.
+if not DEBUG:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 INSTALLED_APPS += ["rest_framework", "api"]
 
-if os.getenv("DATABASE_URL"):
+database_url = os.getenv("DATABASE_URL")
+
+if database_url:
     DATABASES["default"] = dj_database_url.parse(
-        os.environ["DATABASE_URL"], conn_max_age=60
+        database_url,
+        conn_max_age=60,
+        conn_health_checks=True,
+    )
+elif not DEBUG:
+    raise RuntimeError(
+        "DATABASE_URL must be configured when DJANGO_DEBUG=False."
     )
 
 REST_FRAMEWORK = {

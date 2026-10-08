@@ -1,0 +1,38 @@
+# Git metadata
+.git/
+.github/
+
+# Local environment variables and credentials
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+
+# Python virtual environments and caches
+.venv/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Local databases and generated files
+**/db.sqlite3
+**/db.sqlite3-journal
+**/staticfiles/
+**/media/
+**/*.log
+
+# Frontend dependencies and generated output
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+
+# Local development files
+.vscode/
+.idea/
+.DS_Store
